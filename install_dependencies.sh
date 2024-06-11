@@ -25,12 +25,7 @@ else
 fi
 
 echo "Installing dependencies for server..."
-if [ ! -d "$REQ_FILE" ]; then
-  echo "Requirements file not found"
-else
-  pip install -r requirements.txt
-fi
-cd ../..
+pip install -r ./backend/functions/requirements.txt
 echo "Dependencies installed for both client and server."
 
 ## Create .env file from GH Secrets

@@ -25,7 +25,9 @@ def addmessage(req: https_fn.Request) -> https_fn.Response:
     # Send back a message that we've successfully written the message
     return https_fn.Response(f"Message with ID {doc_ref.id} added.")
 
-
+@https_fn.on_request()
+def test2(req: https_fn.Request) -> https_fn.Response:
+    print('test')
 # @firestore_fn.on_document_created(document="messages/{pushId}")
 # def makeuppercase(event: firestore_fn.Event[firestore_fn.DocumentSnapshot | None]) -> None:
 #     """Listens for new documents to be added to /messages. If the document has
