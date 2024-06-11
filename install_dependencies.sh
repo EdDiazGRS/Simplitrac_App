@@ -4,30 +4,52 @@ REQ_FILE="requirements.txt"
 
 # Navigate to the client directory and install dependencies
 echo "Installing dependencies for client..."
-cd ./client || exit
-if [ ! -d "$REQ_FILE" ]; then
-  echo "Requirements file not found"
+if [ -d "./client" ]; then
+  echo "REMOVING CLIENT DIRECTORY"
+  rm -r "client"
+  echo "CLIENT DIRECTORY REMOVED"
+fi
+
+cd ./frontend || exit
+echo "Current working directory":
+pwd
+
+if [ ! "package.json" ]; then
+  echo "NO JSON FILE FOUND"
 else
-  pip install -r requirements.txt
+  npm install
 fi
 cd ..
+
+echo "Current working directory"
+pwd
+
 
 # Navigate to the backend directory and install dependencies
 echo "Creating python3 virtual environment for server..."
 cd ./backend/functions || exit
+echo "Current working directory"
+pwd
+
 if [ -d "$VENV_DIR" ]; then
   echo "Virtual environment already exists"
 else
-  echo "Creating virtual environment..."
-  python3 -m venv venv
+
+  python3.12 -m venv venv
   source venv/bin/activate
   echo "Virtual environment created"
 fi
 cd ../..
 
 echo "Installing dependencies for server..."
-pip install -r ./backend/functions/requirements.txt
-echo "Dependencies installed for both client and server."
+if [ ! "$REQ_FILE" ]; then
+  echo "Requirements file not found"
+  echo "$REQ_FILE"
+else
+  pip install -r requirements.txt
+fi
+#cd ../..
+#echo "Dependencies installed for both client and server."
 
 ## Create .env file from GH Secrets
 #echo "Creating .env file with secrets"
