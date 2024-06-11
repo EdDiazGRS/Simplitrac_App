@@ -34,10 +34,12 @@ pwd
 if [ -d "$VENV_DIR" ]; then
   echo "Virtual environment already exists"
 else
-  echo "Creating virtual environment..."
+
   python3.12 -m venv venv
-c  echo "Virtual environment created"
+  source venv/bin/activate
+  echo "Virtual environment created"
 fi
+cd ../..
 
 echo "Installing dependencies for server..."
 if [ ! "$REQ_FILE" ]; then
