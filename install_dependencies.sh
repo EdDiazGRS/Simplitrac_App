@@ -19,10 +19,11 @@ if [ -d "$VENV_DIR" ]; then
   echo "Virtual environment already exists"
 else
   echo "Creating virtual environment..."
-  python3.12 -m venv venv
+  python3 -m venv venv
   source venv/bin/activate
   echo "Virtual environment created"
 fi
+cd ../..
 
 echo "Installing dependencies for server..."
 pip install -r ./backend/functions/requirements.txt
