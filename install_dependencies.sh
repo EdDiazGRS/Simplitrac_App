@@ -39,7 +39,6 @@ else
   source venv/bin/activate
   echo "Virtual environment created"
 fi
-cd ../..
 
 echo "Installing dependencies for server..."
 if [ ! "$REQ_FILE" ]; then
@@ -48,7 +47,8 @@ if [ ! "$REQ_FILE" ]; then
 else
   pip install -r requirements.txt
 fi
-#cd ../..
+cd ../..
+
 #echo "Dependencies installed for both client and server."
 
 ## Create .env file from GH Secrets
