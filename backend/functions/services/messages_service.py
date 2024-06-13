@@ -1,4 +1,4 @@
-from backend.functions.data.firebase_data import add_document
+from backend.functions.data.messages_data import add_document
 from backend.functions.models.Response import Response
 
 

@@ -1,6 +1,6 @@
 from firebase_functions import https_fn
 
-from backend.functions.services.firebase_service import add_text
+from backend.functions.services.messages_service import add_text
 from backend.functions.models import Response
 
 
