@@ -1,5 +1,5 @@
 from typing import Optional, Any, List
-from protocols.response_protocol import ResponseProtocol
+from backend.functions.protocols.response_protocol import ResponseProtocol
 
 class Response(ResponseProtocol):
     """
