@@ -1,4 +1,4 @@
-from backend.functions.models.User import User
+from backend.functions.models.user import User
 from backend.functions.models.response import Response
 
 
