@@ -7,13 +7,23 @@ from firebase_admin import firestore, credentials
 from protocols.user_protocol import UserProtocol
 from protocols.category_protocol import CategoryProtocol
 from protocols.transaction_protocol import TransactionProtocol
+from dotenv import load_dotenv
+
+import os
+load_dotenv()
 
 # Initialize Firebase Admin SDK (assuming proper credentials setup)
-# The Firebase Admin SDK to access Cloud Firestore.
-from firebase_admin import firestore
-import google.cloud.firestore
+import firebase_admin
+from firebase_admin import credentials, firestore
 
-db: google.cloud.firestore.Client = firestore.client()
+# Use a service account
+
+firebase_service_account = os.getenv('FIREBASE_SERVICE_ACCOUNT')
+firebase_config = json.loads(firebase_service_account)
+cred = credentials.Certificate(firebase_config)
+firebase_admin.initialize_app(cred)
+
+db = firestore.client()
 
 class User(UserProtocol):
     """
