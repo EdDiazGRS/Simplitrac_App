@@ -72,6 +72,8 @@ class User(UserProtocol):
                 raise ValueError("Invalid JSON string provided")
         elif isinstance(data, uuid.UUID):
             self._initialize_from_firestore(data)
+        elif data is None:
+            pass
         else:
             raise ValueError("Constructor requires either a JSON string or a UUID")
 

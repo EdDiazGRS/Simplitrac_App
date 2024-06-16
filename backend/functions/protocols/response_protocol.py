@@ -1,5 +1,6 @@
 from typing import Protocol, Optional, List, Any
 
+
 class ResponseProtocol(Protocol):
     payload: Optional[Any]
     errors: List[str]
