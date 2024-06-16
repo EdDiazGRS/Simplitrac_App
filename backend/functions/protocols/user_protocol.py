@@ -1,8 +1,10 @@
 from typing import Protocol, Optional, List
 from datetime import datetime
 import uuid
-from backend.functions.protocols.category_protocol import CategoryProtocol
-from backend.functions.protocols.transaction_protocol import TransactionProtocol
+
+from backend.functions.models.category import Category
+from backend.functions.models.response import Response
+from backend.functions.models.transaction import Transaction
 
 
 class UserProtocol(Protocol):
@@ -16,8 +18,8 @@ class UserProtocol(Protocol):
     _transaction_id: Optional[uuid.UUID]
     _category_id: Optional[uuid.UUID]
     _admin: Optional[bool]
-    _transactions: List[TransactionProtocol]
-    _categories: List[CategoryProtocol]
+    _transactions: List[Transaction]
+    _categories: List[Category]
 
     @property
     def user_id(self) -> Optional[uuid.UUID]: ...
@@ -80,13 +82,17 @@ class UserProtocol(Protocol):
     def admin(self, value: bool) -> None: ...
 
     @property
-    def transactions(self) -> List[TransactionProtocol]: ...
+    def transactions(self) -> List[Transaction]: ...
 
     @transactions.setter
-    def transactions(self, value: List[TransactionProtocol]) -> None: ...
+    def transactions(self, value: List[Transaction]) -> None: ...
 
     @property
-    def categories(self) -> List[CategoryProtocol]: ...
+    def categories(self) -> List[Category]: ...
 
     @categories.setter
-    def categories(self, value: List[CategoryProtocol]) -> None: ...
+    def categories(self, value: List[Category]) -> None: ...
+
+    def save_to_firestore(self) -> Response: ...
+
+    def serialize(self) -> dict: ...

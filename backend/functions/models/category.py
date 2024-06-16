@@ -64,3 +64,9 @@ class Category(CategoryProtocol):
             value (str): The name of the category.
         """
         self._category_name = value
+
+    def serialize(self) -> dict:
+        return {
+                    'category_id': str(self.category_id) if self.category_id else str(uuid.uuid4()),
+                    'category_name': self.category_name
+                }
