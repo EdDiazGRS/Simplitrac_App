@@ -3,29 +3,14 @@ from datetime import datetime
 import uuid
 from backend.functions.protocols.transaction_protocol import TransactionProtocol
 
-
 class Transaction(TransactionProtocol):
     """
     Represents a financial transaction with various attributes.
 
-    Attributes:
-        _transaction_id (Optional[uuid.UUID]): The unique identifier for the transaction.
-        _created_at (Optional[datetime]): The date and time when the transaction was created.
-        _amount (Optional[float]): The amount of money involved in the transaction.
-        _vendor (Optional[str]): The vendor associated with the transaction.
-        _category_id (Optional[uuid.UUID]): The unique identifier for the category of the transaction.
-        _picture_id (Optional[uuid.UUID]): The unique identifier for the picture related to the transaction.
-        _is_successful (Optional[bool]): Indicates whether the transaction was successful.
-        _recheck (Optional[bool]): Indicates whether the transaction needs to be rechecked.
+    Attributes are initialized during the instantiation of the class.
     """
-    _transaction_id: Optional[uuid.UUID] = None
-    _created_at: Optional[datetime] = None
-    _amount: Optional[float] = None
-    _vendor: Optional[str] = None
-    _category_id: Optional[uuid.UUID] = None
-    _picture_id: Optional[uuid.UUID] = None
-    _is_successful: Optional[bool] = None
-    _recheck: Optional[bool] = None
+
+    class_name = 'Transaction'
 
     def __init__(self, data: Optional[Dict[str, Any]] = None):
         """
@@ -34,6 +19,14 @@ class Transaction(TransactionProtocol):
         Args:
             data (Optional[Dict[str, Any]]): The data to initialize the transaction, typically from a dictionary.
         """
+        self._transaction_id: Optional[uuid.UUID] = None
+        self._created_at: Optional[datetime] = None
+        self._amount: Optional[float] = None
+        self._vendor: Optional[str] = None
+        self._category_id: Optional[uuid.UUID] = None
+        self._picture_id: Optional[uuid.UUID] = None
+        self._is_successful: Optional[bool] = None
+
         if data:
             self._transaction_id = data.get('transaction_id')
             self._created_at = data.get('created_at')
@@ -42,7 +35,6 @@ class Transaction(TransactionProtocol):
             self._category_id = data.get('category_id')
             self._picture_id = data.get('picture_id')
             self._is_successful = data.get('is_successful')
-            self._recheck = data.get('recheck')
 
     @property
     def transaction_id(self) -> Optional[uuid.UUID]:
@@ -184,22 +176,13 @@ class Transaction(TransactionProtocol):
         """
         self._is_successful = value
 
-    @property
-    def recheck(self) -> Optional[bool]:
-        """
-        Gets the recheck status of the transaction.
-
-        Returns:
-            Optional[bool]: Indicates whether the transaction needs to be rechecked.
-        """
-        return self._recheck
-
-    @recheck.setter
-    def recheck(self, value: bool) -> None:
-        """
-        Sets the recheck status of the transaction.
-
-        Args:
-            value (bool): Indicates whether the transaction needs to be rechecked.
-        """
-        self._recheck = value
+    def serialize(self) -> dict:
+        return {
+            'transaction_id': str(self.transaction_id) if self.transaction_id else str(uuid.uuid4()),
+            'created_at': self.created_at,
+            'amount': self.amount,
+            'vendor': self.vendor,
+            'category_id': str(self.category_id) if self.category_id else None,
+            'picture_id': str(self.picture_id) if self.picture_id else None,
+            'is_successful': self.is_successful,
+        }

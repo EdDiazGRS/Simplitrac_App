@@ -10,10 +10,18 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     """
     Save new user to database
     """
-    # print("Works!")
-    # return https_fn.Response("Hello")
-    #
-    user = User()
+    data = None
+    user = None
+
+    try:
+        data = req.get_json()
+    except:
+        pass
+
+    if data:
+        user = User(data)
+    else:
+        user = User()
 
     response: Response = add_new_user(user)
 
