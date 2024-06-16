@@ -1,6 +1,7 @@
 from typing import Optional, Any, List
 from backend.functions.protocols.response_protocol import ResponseProtocol
 
+
 class Response(ResponseProtocol):
     """
     Represents a response object that includes a payload and a list of errors.

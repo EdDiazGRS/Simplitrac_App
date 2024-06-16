@@ -6,16 +6,18 @@ from backend.functions.models.response import Response
 
 
 @https_fn.on_request()
-async def create_new_user(req: https_fn.Request) -> https_fn.Response:
+def create_new_user(req: https_fn.Request) -> https_fn.Response:
     """
     Save new user to database
     """
-
+    # print("Works!")
+    # return https_fn.Response("Hello")
+    #
     user = User()
 
-    response: Response = await add_new_user(user)
+    response: Response = add_new_user(user)
 
     if response.is_successful():
-        return https_fn.Response(f"Message with ID {response.get_payload.id} added.")
+        return https_fn.Response(f"Message with ID {response.get_payload()} added.")
     else:
         return https_fn.Response(f'There was an error: {response.get_errors()}')
