@@ -15,7 +15,7 @@
 
 // export default App;
 
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Container, Row, Col, Table, Button, Form, Modal } from 'react-bootstrap';
 import './App.css';
@@ -153,6 +153,5 @@ const CostField = () => {
     </>
   );
 };
-
 
 export default App;
