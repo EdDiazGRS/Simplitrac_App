@@ -286,6 +286,29 @@ class User(UserProtocol):
 
         return response
 
+    @staticmethod
+    def find(user_id: str) -> Response:
+        result = Response()
+
+        documents: [any] = db.collection(User.class_name).where('user_id', "==", str(user_id)).get()
+        if len(documents) == 0:
+            result.add_error(f"A user with this id (${user_id} doesn't exist.")
+            return result
+        else:
+            # print(f"Here is the document: {documents[0]}")
+            user: Dict[str, str] = documents[0].to_dict()
+            # print(f"Here is the user: {user}")
+            result.set_payload(User(user))
+            return result
+
+    def update_user_in_firestore(self) -> Response:
+        result = Response()
+
+        self.save_to_firestore()
+
+        result.set_payload(f"This user was updated: {self.user_id}")
+        return result
+
     def serialize(self) -> dict:
         return {
             'user_id': str(self._user_id),

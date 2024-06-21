@@ -76,6 +76,8 @@ class Response(ResponseProtocol):
         Args:
             error (str): A string describing the error.
         """
+        print(self.get_errors())
+        print(f"Appending this error: {error}")
         self.errors.append(error)
 
     def __repr__(self) -> str:
