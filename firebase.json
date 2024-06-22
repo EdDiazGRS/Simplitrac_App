@@ -1,0 +1,39 @@
+{
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "functions",
+      "ignore": [
+        "venv",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ]
+    }
+  ],
+  "emulators": {
+    "functions": {
+      "port": 5002
+    },
+    "firestore": {
+      "port": 8081
+    },
+    "pubsub": {
+      "port": 8086
+    },
+    "ui": {
+      "enabled": true
+    },
+    "singleProjectMode": true,
+    "auth": {
+      "port": 9091
+    },
+    "database": {
+      "port": 9001
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
