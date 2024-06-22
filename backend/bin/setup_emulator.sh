@@ -173,6 +173,9 @@ else
         source ~/.bashrc
     fi
 
+    # set environmental variable to avoid ESM conflict
+    export NODE_OPTIONS='--experimental-specifier-resolution=node'
+
     echo "You should now be ready to start the virtual environment"
     echo "Run: 'firebase emulators:start' to start the emulators"
 fi
