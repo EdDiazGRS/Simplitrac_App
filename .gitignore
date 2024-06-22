@@ -64,5 +64,7 @@ node_modules/
 
 # dotenv environment variables file
 .env
-
 venv
+#python env controller
+.python-version
+

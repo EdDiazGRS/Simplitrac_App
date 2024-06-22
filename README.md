@@ -14,9 +14,9 @@
 
 4. Install the dependencies for the client and the server:
 
-`chmod 755 install_dependencies.sh`
+`chmod 755 ./bin/install_dependencies.sh`
 
-`./install_dependencies.sh`
+`./bin/install_dependencies.sh`
 
    This will install the following dependencies for the server:
 
