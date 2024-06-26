@@ -8,7 +8,34 @@ from models.response import Response
 from urllib.parse import parse_qs
 from typing import Union
 import json
+from functools import wraps
 
+
+def cors_enabled_function(func):
+    @wraps(func)
+    def wrapper(req, *args, **kwargs):
+        if req.method == 'OPTIONS':
+            headers = {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'PUT, POST, GET, DELETE, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+            }
+            print("Inside cors function")
+            return https_fn.Response('', 204, headers)
+
+        # Call the original function
+        response = func(req, *args, **kwargs)
+
+        # Ensure the response has the CORS headers
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        print("Returning response in cors")
+        print(response)
+        return response
+    print("returning wrapper")
+    return wrapper
+
+
+@cors_enabled_function
 @https_fn.on_request()
 def create_new_user(req: https_fn.Request) -> https_fn.Response:
     """
@@ -19,6 +46,9 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     """
     data = None
     user_instance = None
+    access_token = None
+    response = Response()
+
 
     try:
         data = req.get_json()
@@ -26,9 +56,23 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
         pass
 
     if data:
+        print(data)
         user_instance = user.User(data)
+        access_token = user_instance.access_token
     else:
         user_instance = user.User()
+
+    if not access_token:
+        return generate_http_response("A token is needed to access this resource", 400)
+
+    try:
+        if not user_instance.is_authenticated():
+            response.add_error("User could not be authenticated")
+            return generate_http_response(response.get_errors(), 400)
+
+    except Exception as e:
+        response.add_error("There was an issue authenticating the user")
+        return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
 
@@ -38,6 +82,7 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response(f'There was an error: {response.get_errors()}')
 
 
+@cors_enabled_function
 @https_fn.on_request()
 def update_user(req: https_fn.Request) -> https_fn.Response:
     """
@@ -51,7 +96,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
     query_string = req.query_string.decode()
     params = parse_qs(query_string)
-    user_id_string= params.get('user_id', [None])[0]
+    user_id_string = params.get('user_id', [None])[0]
     user_id = uuid.UUID(user_id_string)
 
     if not user_id:
@@ -95,6 +140,17 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
         )
     else:
         return https_fn.Response(
-            response=json.dumps({'error':message}),
+            response=json.dumps({'error': message}),
             status=code
         )
+#
+#
+# def handle_cors(req: https_fn.Request) -> Union[https_fn.Response, None]:
+#     if req.method == 'OPTIONS':
+#         headers = {
+#             'Access-Control-Allow-Origin': '*',
+#             'Access-Control-Allow-Methods': 'PUT, POST, GET, DELETE, OPTIONS',
+#             'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+#         }
+#         return https_fn.Response('', 204, headers)
+#     return None
