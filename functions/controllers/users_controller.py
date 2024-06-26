@@ -51,6 +51,8 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
     query_string = req.query_string.decode()
     params = parse_qs(query_string)
+    print('line 54')
+    print(params)
     user_id_string= params.get('user_id', [None])[0]
     user_id = uuid.UUID(user_id_string)
 
@@ -69,18 +71,81 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         else:
             return generate_http_response('There was an error parsing the json string', 400)
 
-
     print(user_id)
     print(user_instance.user_id)
     if user_id != user_instance.user_id:
         return generate_http_response("Param user_id and the user_id in the body do not match", 400)
 
+    for k, v in params.items():
+        if getattr(user_instance, k) != v[0]:
+            setattr(user_instance, k, v[0])
+
+    print(user_instance)
     # return https_fn.Response(f"{user_id} for this user: {user.serialize()}")
-    update_result = users_service.update_user(user_id, user)
+    update_result = users_service.update_user(user_id, user_instance)
     if not update_result.is_successful():
         return generate_http_response(update_result.get_errors(), 400)
     else:
         return https_fn.Response(update_result.get_payload(), 200)
+
+
+@https_fn.on_request()
+def get_existing_user(req: https_fn.Request) -> https_fn.Response:
+    """
+    Retrieves existing user in the database
+
+    :param req: The request must have a user_id param in the query string
+    :return: https_fn.Response
+    """
+    # user_instance = None
+    # query_string = req.query_string.decode()
+    # params = parse_qs(query_string)
+
+    # params['user_id'] = '99556ba9-8162-4c54-93b2-a585a5562bba'
+    # # print(params)
+    # user_id_string = params.get('user_id', [None])
+    # print("user_id_string: " + str(user_id_string))
+    # user_id = uuid.UUID(user_id_string)
+    user_instance = None
+    user_id: uuid.UUID = uuid.UUID('{00000000-0000-0000-0000-000000000000}')
+
+    query_string = req.query_string.decode()
+    params = parse_qs(query_string)
+    print("params")
+    print(params.get('user_id', [None])[0])
+    user_id_string= params.get('user_id', [None])[0]
+    print("user_id_string: " + user_id_string)
+    user_id = uuid.UUID(user_id_string)
+
+    if not user_id:
+        return generate_http_response('user_id parameter is required', 400)
+
+    try:
+        request_data = req.get_json(silent=False)
+        if request_data is None:
+            raise ValueError("Empty JSON body")
+
+        user_instance = user.User(request_data)
+        print(user_instance)
+    except Exception as e:
+        if isinstance(e, ValueError):
+            return generate_http_response('body must be provided', 400)
+        else:
+            return generate_http_response('There was an error parsing the json string', 400)
+
+
+    print(user_id)
+    print(user_instance.user_id)
+    print(user_instance.email)
+    if user_id != user_instance.user_id:
+        return generate_http_response("Param user_id and the user_id in the body do not match", 400)
+
+    # return https_fn.Response(f"{user_id} for this user: {user.serialize()}")
+    get_result = users_service.get_existing_user(user_id, user_instance)
+    if not get_result.is_successful():
+        return generate_http_response(get_result.get_errors(), 400)
+    else:
+        return https_fn.Response(get_result.get_payload(), 200)
 
 
 def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
@@ -96,5 +161,3 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
             response=json.dumps({'error':message}),
             status=code
         )
-
-
