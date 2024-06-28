@@ -117,7 +117,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
     # iterate through params send on https req to find updated information
     for k, v in params.items():
-        if getattr(user_instance, k) != v[0]:
+        if hasattr(user_instance, k) and getattr(user_instance, k) != v[0]:
             setattr(user_instance, k, v[0])
 
     # return https_fn.Response(f"{user_id} for this user: {user.serialize()}")
