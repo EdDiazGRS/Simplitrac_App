@@ -24,11 +24,16 @@ def update_user(user_id: str, user: User) -> Response:
 
 
 def find_user(user_id: str) -> Response:
-    result = Response()
     find_result: Response = User.find(user_id)
 
     if not find_result.is_successful():
-        result.set_errors(f"[User Service] User with this id: {user_id} not found")
-        return result
+        find_result.set_errors(f"[User Service] User with this id: {user_id} not found")
+        return find_result
     else:
         return find_result
+
+def delete_user(user_id: str) -> Response:
+    user = find_user(user_id)
+    user_instance: User = user.get_payload()
+    return user_instance.remove()
+

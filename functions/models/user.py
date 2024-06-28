@@ -310,6 +310,19 @@ class User(UserProtocol):
 
         result.set_payload(f"This user was updated: {self.user_id}")
         return result
+    
+    def remove(self) -> Response:
+        result = Response()
+
+        documents: [any] = db.collection(User.class_name).where('user_id', "==", self.user_id).get()
+        if len(documents) == 0:
+            result.add_error(f"A user with this id (${self.user_id} doesn't exist.")
+            return result
+        else:
+            for doc in documents:
+                doc.reference.delete()
+            result.set_payload(f"This user was deleted: {self.user_id}")
+            return result
 
     def is_authenticated(self) -> bool:
         try:
@@ -331,3 +344,9 @@ class User(UserProtocol):
             'last_login': self._last_login,
             'admin': self._admin
         }
+
+class UserEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, User):
+            return obj.__dict__
+        return super().default(obj)

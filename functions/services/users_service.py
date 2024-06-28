@@ -2,7 +2,6 @@ from models.user import User
 from repository.users_repo import create_user
 from models.response import Response
 from repository import users_repo
-import uuid
 
 
 def add_new_user(user: User) -> Response:
@@ -25,3 +24,29 @@ def update_user(user_id: str, user: User) -> Response:
         pass
     else:
         return result
+
+def get_existing_user(user_id: str) -> Response:
+    """
+    This retrieves an existing user in the database
+    """
+
+    search_result = users_repo.find_user(user_id)
+    if search_result.is_successful():
+        return search_result
+    else:
+        search_result.set_errors("This user does not exist")
+        return search_result
+    
+def delete_user(user_id: str) -> Response:
+    """
+    This deletes an existing user in the database
+    """
+    
+    search_result = users_repo.find_user(user_id)
+    print(search_result)
+    if search_result.is_successful():
+        delete_result = users_repo.delete_user(user_id)
+        return delete_result
+    else:
+        search_result.set_errors("This user does not exist")
+        return search_result
