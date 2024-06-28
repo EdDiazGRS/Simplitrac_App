@@ -64,18 +64,17 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
-    # UNCOMMENT BEFORE PUSH
-    # if not access_token:
-    #     return generate_http_response("A token is needed to access this resource", 400)
+    if not access_token:
+        return generate_http_response("A token is needed to access this resource", 400)
 
-    # try:
-    #     if not user_instance.is_authenticated():
-    #         response.add_error("User could not be authenticated")
-    #         return generate_http_response(response.get_errors(), 400)
+    try:
+        if not user_instance.is_authenticated():
+            response.add_error("User could not be authenticated")
+            return generate_http_response(response.get_errors(), 400)
 
-    # except Exception as e:
-    #     response.add_error("There was an issue authenticating the user")
-    #     return generate_http_response(response.get_errors(), 400)
+    except Exception as e:
+        response.add_error("There was an issue authenticating the user")
+        return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
     
@@ -95,11 +94,8 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     :return: https_fn.Response
     """
     user_instance = None
-    user_id: string = ""
+    user_id, params = get_user_id(req.query_string.decode())
 
-    query_string = req.query_string.decode()
-    params = parse_qs(query_string)
-    user_id= params.get('user_id', [None])[0]
 
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
@@ -141,23 +137,48 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     :return: https_fn.Response
     """
     user_instance = None
-    user_id: str = ""
+    user_id, _ = get_user_id(req.query_string.decode())
 
-    query_string = req.query_string.decode()
-    params = parse_qs(query_string)
-    user_id = params.get('user_id', [None])[0]
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
 
     get_result = users_service.get_existing_user(user_id)
     user_instance = get_result.get_payload()
     user_json = json.dumps(user_instance, cls=user.UserEncoder)
-
+    print(user_json)
     if get_result.is_successful():
         return https_fn.Response(user_json, 200)
     else:
         return generate_http_response(get_result.get_errors(), 400)
-    
+
+
+@cors_enabled_function
+@https_fn.on_request()
+def delete_user(req: https_fn.Request) -> https_fn.Response:
+    """
+    Deletes user in the database
+    :param req: The request must have a user_id param in the query string
+    :return: https_fn.Response
+    """
+    user_id, _ = get_user_id(req.query_string.decode())
+
+    if not user_id:
+        return generate_http_response('user_id parameter is required', 400)
+
+    get_result = users_service.delete_user(user_id)
+
+    if get_result.is_successful():
+        return https_fn.Response(f"User with ID {user_id} deleted.")
+    else:
+        return generate_http_response(get_result.get_errors(), 400)
+        
+
+def get_user_id(query_string):
+    user_id: str = ""
+    params = parse_qs(query_string)
+    user_id = params.get('user_id', [None])[0]
+    return user_id, params
+
 
 def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
     if isinstance(message, list):

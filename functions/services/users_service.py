@@ -36,3 +36,17 @@ def get_existing_user(user_id: str) -> Response:
     else:
         search_result.set_errors("This user does not exist")
         return search_result
+    
+def delete_user(user_id: str) -> Response:
+    """
+    This deletes an existing user in the database
+    """
+    
+    search_result = users_repo.find_user(user_id)
+    print(search_result)
+    if search_result.is_successful():
+        delete_result = users_repo.delete_user(user_id)
+        return delete_result
+    else:
+        search_result.set_errors("This user does not exist")
+        return search_result
