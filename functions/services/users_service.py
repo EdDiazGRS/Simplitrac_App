@@ -10,7 +10,7 @@ def add_new_user(user: User) -> Response:
     return result
 
 
-def update_user(user_id: uuid.UUID, user: User) -> Response:
+def update_user(user_id: str, user: User) -> Response:
     """
     This creates a brand new user in the database
     """

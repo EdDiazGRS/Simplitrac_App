@@ -92,12 +92,12 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     :return: https_fn.Response
     """
     user_instance = None
-    user_id: uuid.UUID = uuid.UUID('00000000-0000-0000-0000-000000000000')
+    user_id: str = ""
 
     query_string = req.query_string.decode()
     params = parse_qs(query_string)
     user_id_string = params.get('user_id', [None])[0]
-    user_id = uuid.UUID(user_id_string)
+    user_id = user_id_string
 
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
