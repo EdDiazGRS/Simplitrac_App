@@ -3,9 +3,10 @@ from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 import uuid
 import firebase_admin
-from firebase_admin import firestore, credentials
+from firebase_admin import firestore, credentials, auth
 from dotenv import load_dotenv
 import os
+import http.client as http
 
 from models.category import Category
 from models.transaction import Transaction
@@ -17,6 +18,7 @@ env_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(env_path)
 
 # Initialize Firebase using the service account
+from flask_cors import CORS
 firebase_service_account = os.getenv('SECRET_KEY_FOR_FIREBASE')
 firebase_config = json.loads(firebase_service_account)
 cred = credentials.Certificate(firebase_config)
@@ -35,15 +37,15 @@ class User(UserProtocol):
 
     class_name = "User"
 
-    def __init__(self, data: Optional[Union[dict, uuid.UUID]] = None):
+    def __init__(self, data: Optional[Union[dict, str]] = None):
         """
         Initializes a new User instance.
 
         Args:
-            data (Optional[Union[str, uuid.UUID]]): The data to initialize the user. Can be a JSON string or UUID.
+            data (Optional[Union[str, Any]]): The data to initialize the user. Can be a JSON string or str.
         """
-        self._user_id: Optional[uuid.UUID] = uuid.uuid4()
-        self._google_id: Optional[str] = None
+        self._user_id: Optional[str] = None
+        self._access_token: [Optional[str]] = None
         self._email: Optional[str] = None
         self._first_name: Optional[str] = None
         self._last_name: Optional[str] = None
@@ -58,22 +60,22 @@ class User(UserProtocol):
                 self._initialize_from_data(data)
             except json.JSONDecodeError:
                 raise ValueError("Invalid JSON string provided")
-        elif isinstance(data, uuid.UUID):
+        elif isinstance(data, str):
             self._initialize_from_firestore(data)
         elif data is None:
             pass
         else:
-            raise ValueError("Constructor requires either a JSON string or a UUID")
+            raise ValueError("Constructor requires either a JSON string or a str")
 
     def _initialize_from_data(self, data: Dict[str, Any]) -> None:
         """
         Initializes the user attributes from a dictionary of data.
 
         Args:
-            data (Dict[str, Any]): The data to initialize the user.
+            data (Dict[str, str]): The data to initialize the user.
         """
-        self._user_id = uuid.UUID(data.get('user_id')) if data.get('user_id') else uuid.uuid4()
-        self._google_id = data.get('google_id')
+        self._user_id = data.get('user_id') if data.get('user_id') else ""
+        self._access_token = data.get('access_token')
         self._email = data.get('email')
         self._first_name = data.get('first_name')
         self._last_name = data.get('last_name')
@@ -86,14 +88,14 @@ class User(UserProtocol):
         if 'categories' in data:
             self._categories = [Category(cat) for cat in data['categories']]
 
-    def _initialize_from_firestore(self, user_id: uuid.UUID) -> None:
+    def _initialize_from_firestore(self, user_id: str) -> None:
         """
         Fetches and initializes the user data from Firestore using the provided UUID.
 
         Args:
-            user_id (uuid.UUID): The unique identifier of the user in Firestore.
+            user_id (str): The unique identifier of the user in Firestore.
         """
-        user_ref = db.collection(self.class_name).document(str(user_id))
+        user_ref = db.collection(self.class_name).document(user_id)
         user_doc = user_ref.get()
         if user_doc.exists:
             user_data = user_doc.to_dict()
@@ -115,24 +117,24 @@ class User(UserProtocol):
             self._categories = [Category(doc.to_dict()) for doc in category_docs]
 
     @property
-    def user_id(self) -> Optional[uuid.UUID]:
+    def user_id(self) -> Optional[str]:
         """Gets the user ID."""
         return self._user_id
 
     @user_id.setter
-    def user_id(self, value: uuid.UUID) -> None:
+    def user_id(self, value: str) -> None:
         """Sets the user ID."""
         self._user_id = value
 
     @property
-    def google_id(self) -> Optional[str]:
-        """Gets the Google ID of the user."""
-        return self._google_id
+    def access_token(self) -> Optional[str]:
+        """Gets the access token for the user."""
+        return self._access_token
 
-    @google_id.setter
-    def google_id(self, value: str) -> None:
-        """Sets the Google ID of the user."""
-        self._google_id = value
+    @access_token.setter
+    def access_token(self, value: str) -> None:
+        """Sets the access token for the user"""
+        self._access_token = value
 
     @property
     def email(self) -> Optional[str]:
@@ -290,7 +292,7 @@ class User(UserProtocol):
     def find(user_id: str) -> Response:
         result = Response()
 
-        documents: [any] = db.collection(User.class_name).where('user_id', "==", str(user_id)).get()
+        documents: [any] = db.collection(User.class_name).where('user_id', "==", user_id).get()
         if len(documents) == 0:
             result.add_error(f"A user with this id (${user_id} doesn't exist.")
             return result
@@ -309,10 +311,19 @@ class User(UserProtocol):
         result.set_payload(f"This user was updated: {self.user_id}")
         return result
 
+    def is_authenticated(self) -> bool:
+        try:
+            # The decoded token will return a dictionary with key-value pairs for the user
+            decoded_token = auth.verify_id_token(self._access_token)
+            return True if decoded_token.get("uid") == self._user_id else False
+        except Exception as e:
+            print(f"Token verification error: {str(e)}")
+            return False
+
     def serialize(self) -> dict:
         return {
-            'user_id': str(self._user_id),
-            'google_id': self._google_id,
+            'user_id': self._user_id,
+            'access_token': self._access_token,
             'email': self._email,
             'first_name': self._first_name,
             'last_name': self._last_name,
@@ -320,3 +331,9 @@ class User(UserProtocol):
             'last_login': self._last_login,
             'admin': self._admin
         }
+
+class UserEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, User):
+            return obj.__dict__
+        return super().default(obj)

@@ -1,13 +1,14 @@
 import uuid
 
 from firebase_functions import https_fn
-
 from models import user
 from services import users_service
 from models.response import Response
 from urllib.parse import parse_qs
 from typing import Union
 import json
+from flask import jsonify
+
 
 @https_fn.on_request()
 def create_new_user(req: https_fn.Request) -> https_fn.Response:
@@ -31,7 +32,7 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
         user_instance = user.User()
 
     response: Response = users_service.add_new_user(user_instance)
-
+    
     if response.is_successful():
         return https_fn.Response(f"Message with ID {response.get_payload()} added.")
     else:
@@ -47,13 +48,11 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     :return: https_fn.Response
     """
     user_instance = None
-    user_id: uuid.UUID = uuid.UUID('00000000-0000-0000-0000-000000000000')
+    user_id: string = ""
 
     query_string = req.query_string.decode()
     params = parse_qs(query_string)
-    user_id_string= params.get('user_id', [None])[0]
-    user_id = uuid.UUID(user_id_string)
-
+    user_id = params.get('user_id', [None])[0]
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
 
@@ -79,11 +78,37 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
     # return https_fn.Response(f"{user_id} for this user: {user.serialize()}")
     update_result = users_service.update_user(user_id, user_instance)
-    if not update_result.is_successful():
-        return generate_http_response(update_result.get_errors(), 400)
-    else:
-        print(update_result.get_payload())
+    if update_result.is_successful():
         return https_fn.Response(update_result.get_payload(), 200)
+    else:
+        return generate_http_response(update_result.get_errors(), 400)
+
+
+@https_fn.on_request()
+def get_existing_user(req: https_fn.Request) -> https_fn.Response:
+    """
+    Retrieves existing user in the database
+    :param req: The request must have a user_id param in the query string
+    :return: https_fn.Response
+    """
+    user_instance = None
+    user_id: str = ""
+
+    query_string = req.query_string.decode()
+    params = parse_qs(query_string)
+    user_id = params.get('user_id', [None])[0]
+    if not user_id:
+        return generate_http_response('user_id parameter is required', 400)
+
+    get_result = users_service.get_existing_user(user_id)
+    user_instance = get_result.get_payload()
+    user_json = json.dumps(user_instance, cls=user.UserEncoder)
+
+    if get_result.is_successful():
+        return https_fn.Response(user_json, 200)
+    else:
+        return generate_http_response(get_result.get_errors(), 400)
+    
 
 def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
     if isinstance(message, list):
@@ -98,3 +123,4 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
             response=json.dumps({'error':message}),
             status=code
         )
+
