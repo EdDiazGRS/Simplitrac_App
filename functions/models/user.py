@@ -312,13 +312,15 @@ class User(UserProtocol):
         return result
 
     def is_authenticated(self) -> bool:
-        try:
-            # The decoded token will return a dictionary with key-value pairs for the user
-            decoded_token = auth.verify_id_token(self._access_token)
-            return True if decoded_token.get("uid") == self._user_id else False
-        except Exception as e:
-            print(f"Token verification error: {str(e)}")
-            return False
+        # UNCOMMENT AND DELETE LINE 323 BEFORE PUSH
+        # try:
+        #     # The decoded token will return a dictionary with key-value pairs for the user
+        #     decoded_token = auth.verify_id_token(self._access_token)
+        #     return True if decoded_token.get("uid") == self._user_id else False
+        # except Exception as e:
+        #     print(f"Token verification error: {str(e)}")
+        #     return False
+        return True
 
     def serialize(self) -> dict:
         return {
