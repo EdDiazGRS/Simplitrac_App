@@ -1,5 +1,7 @@
 from models.user import User
 from models.response import Response
+import string
+import random
 
 
 def create_user(user: User) -> Response:
@@ -8,6 +10,8 @@ def create_user(user: User) -> Response:
     """
 
     result: Response = Response()
+    if not user.user_id:
+        user.user_id = "".join(random.choices(string.ascii_letters+string.digits, k=16))
     result = user.save_to_firestore()
 
     return result
