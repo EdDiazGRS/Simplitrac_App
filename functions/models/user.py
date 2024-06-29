@@ -293,22 +293,43 @@ class User(UserProtocol):
         result = Response()
 
         documents: [any] = db.collection(User.class_name).where('user_id', "==", user_id).get()
-        if len(documents) == 0:
-            result.add_error(f"A user with this id (${user_id} doesn't exist.")
-            return result
-        else:
-            # print(f"Here is the document: {documents[0]}")
-            user: Dict[str, str] = documents[0].to_dict()
-            # print(f"Here is the user: {user}")
-            result.set_payload(User(user))
-            return result
+        # if len(documents) == 0:
+        #     result.add_error(f"A user with this id (${user_id} doesn't exist.")
+        #     return result
+        # else:
+        #     # adding subcollections
+        #     all_data = []
+        #     # docs = documents.stream()
+        print("documents")
+        print(documents)
+        result.set_payload(convert_to_json(documents))
+        return result
 
+            # for doc in documents:
+            #     doc_data = doc.to_dict()
+            #     category_ref = doc.reference.collection('Category')
+            #     category_docs = [subdoc.to_dict() for subdoc in category_ref.get()]
+            #     doc_data['categories'] = category_docs  # Add subcollection data to parent
+            #     transaction_ref = doc.reference.collection('Transaction')
+            #     transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.get()]
+            #     doc_data['transaction'] = transaction_docs  # Add subcollection data to parent
+            #     all_data.append(doc_data)
+
+            # print("all_data")
+            # print(all_data)
+            # # print(f"Here is the document: {documents[0]}")
+            # # user: Dict[str, str] = documents[0].to_dict()
+            # # print(f"Here is the user: {user}")
+            # result.set_payload(convert_to_json(all_data[0]))
+            # return result
+
+    
     def update_user_in_firestore(self) -> Response:
         result = Response()
 
         self.save_to_firestore()
 
-        result.set_payload(f"This user was updated: {self.user_id}")
+        result.set_payload(f"User {self.user_id} was updated: ")
         return result
     
     def remove(self) -> Response:
@@ -352,3 +373,41 @@ class UserEncoder(json.JSONEncoder):
         if isinstance(obj, User):
             return obj.__dict__
         return super().default(obj)
+
+def convert_to_json(collection_ref, recursion_depth=0, max_recursion_depth=3):
+        """Converts a Firestore collection (and its subcollections) to a JSON-serializable dictionary.
+
+        Args:
+            collection_ref: A Firestore CollectionReference.
+            recursion_depth: Current level of recursion (default 0).
+            max_recursion_depth: Maximum depth to recurse (default 3 to avoid infinite loops).
+
+        Returns:
+            A dictionary representing the collection and subcollections.
+        """
+        data = []
+        print("collection_ref")
+        print(collection_ref)
+        for doc in collection_ref:
+            print("doc")
+            print(doc)
+            doc_data = doc.to_dict()
+
+            # Recursively get subcollections if depth allows
+            if recursion_depth < max_recursion_depth:
+                for subcol in doc.reference.collections():
+                    subcol_name = subcol.id
+                    print(subcol_name)
+                    print(subcol)
+                    doc_data[subcol_name] = convert_to_json(
+                        [subcol], recursion_depth + 1, max_recursion_depth
+                    )
+
+            data.append(doc_data)
+
+        return data
+
+# collection_ref = db.collection("your_collection_name")
+# json_data = convert_firestore_collection_to_json(collection_ref)
+
+# print(json.dumps(json_data, indent=2))  # Pretty-print the JSON output

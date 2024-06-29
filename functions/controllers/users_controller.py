@@ -147,7 +147,7 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     get_result = users_service.get_existing_user(user_id)
     user_instance = get_result.get_payload()
     user_json = json.dumps(user_instance, cls=user.UserEncoder)
-    print(user_json)
+    # gotten_user: user.User = (user_json)
     if get_result.is_successful():
         return https_fn.Response(user_json, 200)
     else:
