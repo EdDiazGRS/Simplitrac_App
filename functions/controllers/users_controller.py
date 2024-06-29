@@ -64,17 +64,18 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
-    if not access_token:
-        return generate_http_response("A token is needed to access this resource", 400)
+    # UNCOMMENT BEFORE PUSH
+    # if not access_token:
+    #     return generate_http_response("A token is needed to access this resource", 400)
 
-    try:
-        if not user_instance.is_authenticated():
-            response.add_error("User could not be authenticated")
-            return generate_http_response(response.get_errors(), 400)
+    # try:
+    #     if not user_instance.is_authenticated():
+    #         response.add_error("User could not be authenticated")
+    #         return generate_http_response(response.get_errors(), 400)
 
-    except Exception as e:
-        response.add_error("There was an issue authenticating the user")
-        return generate_http_response(response.get_errors(), 400)
+    # except Exception as e:
+    #     response.add_error("There was an issue authenticating the user")
+    #     return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
     
@@ -95,16 +96,18 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     """
     user_instance = None
     user_id, params = get_user_id(req.query_string.decode())
+
     
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
 
     try:
-        request_data = req.get_json(silent=False)
+        # request_data = req.get_json(silent=False)
+        request_data = users_service.get_existing_user(user_id)
         if request_data is None:
             raise ValueError("Empty JSON body")
+        user_instance = request_data.get_payload()
 
-        user_instance = user.User(request_data)
     except Exception as e:
         if isinstance(e, ValueError):
             return generate_http_response('body must be provided', 400)
@@ -118,7 +121,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     for k, v in params.items():
         if hasattr(user_instance, k) and getattr(user_instance, k) != v[0]:
             setattr(user_instance, k, v[0])
-
+            
     # return https_fn.Response(f"{user_id} for this user: {user.serialize()}")
     update_result = users_service.update_user(user_id, user_instance)
     if update_result.is_successful():
