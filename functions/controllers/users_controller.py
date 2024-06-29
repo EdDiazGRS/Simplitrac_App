@@ -97,6 +97,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     user_instance = None
     user_id, params = get_user_id(req.query_string.decode())
 
+    
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
 
