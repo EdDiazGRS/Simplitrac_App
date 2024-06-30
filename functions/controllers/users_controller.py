@@ -64,7 +64,7 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
-    # UNCOMMENT BEFORE PUSH
+    # TODO UNCOMMENT BEFORE PUSH
     # if not access_token:
     #     return generate_http_response("A token is needed to access this resource", 400)
 

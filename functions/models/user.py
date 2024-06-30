@@ -13,6 +13,7 @@ from models.transaction import Transaction
 from protocols.user_protocol import UserProtocol
 from models.response import Response
 
+
 # Load environment variables
 env_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(env_path)
@@ -303,6 +304,10 @@ class User(UserProtocol):
         print("documents")
         print(documents)
         result.set_payload(convert_to_json(documents))
+        print("convert_to_json() result")
+        print(result)
+        # test = marshal.loads(result.get_payload())
+        # print(test)
         return result
 
             # for doc in documents:
@@ -347,7 +352,7 @@ class User(UserProtocol):
 
     def is_authenticated(self) -> bool:
         return True
-        # UNCOMMENT AND DELETE LINE ABOVE BEFORE PUSH
+        # TODO UNCOMMENT AND DELETE LINE ABOVE BEFORE PUSH
         # try:
         #     # The decoded token will return a dictionary with key-value pairs for the user
         #     decoded_token = auth.verify_id_token(self._access_token)
@@ -373,6 +378,8 @@ class UserEncoder(json.JSONEncoder):
         if isinstance(obj, User):
             return obj.__dict__
         return super().default(obj)
+#from pymarshaler.marshal import Marshal
+
 
 def convert_to_json(collection_ref, recursion_depth=0, max_recursion_depth=3):
         """Converts a Firestore collection (and its subcollections) to a JSON-serializable dictionary.
@@ -392,6 +399,9 @@ def convert_to_json(collection_ref, recursion_depth=0, max_recursion_depth=3):
             print("doc")
             print(doc)
             doc_data = doc.to_dict()
+            print("doc_data")
+            print(doc_data)
+
 
             # Recursively get subcollections if depth allows
             if recursion_depth < max_recursion_depth:
@@ -399,8 +409,9 @@ def convert_to_json(collection_ref, recursion_depth=0, max_recursion_depth=3):
                     subcol_name = subcol.id
                     print(subcol_name)
                     print(subcol)
+                    print(doc_data[subcol_name])
                     doc_data[subcol_name] = convert_to_json(
-                        [subcol], recursion_depth + 1, max_recursion_depth
+                        doc_data[subcol], recursion_depth + 1, max_recursion_depth
                     )
 
             data.append(doc_data)
