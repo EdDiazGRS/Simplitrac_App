@@ -66,6 +66,7 @@ pwd
 # Navigate to the backend directory and install dependencies
 echo "Creating python3 virtual environment for server..."
 cd ./functions || exit
+
 echo "Current working directory"
 pwd
 
