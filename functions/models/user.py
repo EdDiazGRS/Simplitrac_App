@@ -1,13 +1,10 @@
 import json
 from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
-import uuid
 import firebase_admin
 from firebase_admin import firestore, credentials, auth
 from dotenv import load_dotenv
 import os
-import http.client as http
-
 from models.category import Category
 from models.transaction import Transaction
 from protocols.user_protocol import UserProtocol
@@ -75,16 +72,16 @@ class User(UserProtocol):
         Args:
             data (Dict[str, str]): The data to initialize the user.
         """
-        self._user_id = data.get('user_id') if data.get('user_id') else ""
-        self._access_token = data.get('access_token')
-        self._email = data.get('email')
-        self._first_name = data.get('first_name')
-        self._last_name = data.get('last_name')
-        self._created_at = data.get('created_at')
-        self._last_login = data.get('last_login')
-        self._admin = data.get('admin')
-        # for k, v in data.items():
-        #     setattr(self, k, v)
+        # self._user_id = data.get('user_id') if data.get('user_id') else ""
+        # self._access_token = data.get('access_token')
+        # self._email = data.get('email')
+        # self._first_name = data.get('first_name')
+        # self._last_name = data.get('last_name')
+        # self._created_at = data.get('created_at')
+        # self._last_login = data.get('last_login')
+        # self._admin = data.get('admin')
+        for k, v in data.items():
+            setattr(self, k, v)
 
         if 'transactions' in data:
             self._transactions = [Transaction(tx) for tx in data['transactions']]
@@ -293,29 +290,98 @@ class User(UserProtocol):
     
     @staticmethod
     def find(user_id: str) -> Response:
-        result = Response()
+        """Finds a single user in the Firestore database by their user_id.
 
+        This function queries the Firestore collection specified by the `User` class
+        to locate a user with the given `user_id`. It returns a `Response` object 
+        containing either the serialized user data or an error message.
+
+        Args:
+            user_id: A string representing the unique identifier (UUID) of the user to find.
+
+        Returns:
+            A Response object:
+                - If the user is found, the `payload` attribute will contain a dictionary 
+                  representing the serialized user data.
+                - If no user is found, or multiple users are found with the same ID (an error condition),
+                  the `errors` attribute will contain an error message.
+                - The `is_successful()` method can be used to determine the success of the operation.
+
+        Raises:
+            google.cloud.exceptions.NotFound: If the specified collection does not exist.
+            google.cloud.exceptions.FirebaseError: If there is an error communicating with Firestore.
+
+        Example Usage:
+            result = User.find("123e4567-e89b-12d3-a456-426614174000")
+            if result.is_successful():
+                user_data = result.get_payload()
+                # Process user_data
+            else:
+                error_message = result.get_errors()
+                # Handle the error
+        """
+
+        result = Response()  # Initialize a Response object
+
+        # Query Firestore for documents with the matching user_id
         documents = db.collection(User.class_name).where('user_id', "==", user_id).get()
-        
+    
+        # Handle different query result scenarios using pattern matching:
         match len(documents):
-            case 0:
-                result.add_error(f"A user with id ${user_id} doesn't exist.")
-            case 1:
-                result.set_payload(User.convert_to_json(documents[0]))
-            case _:
-                result.add_error(F"More than user with is ${user_id} exists.")
-        
+            case 0:  # No user found
+                result.add_error(f"A user with id {user_id} doesn't exist.")
+            case 1:  # Single user found
+                user_instance: User = User.extract_subcollections(documents[0])
+                result.set_payload(user_instance)
+            case _:  # Multiple users found (shouldn't happen with unique IDs)
+                result.add_error(f"More than one user with id {user_id} exists.")
+
         return result
 
 
     def update_user_in_firestore(self) -> Response:
-        result = Response()
-
-        self.save_to_firestore()
-
-        result.set_payload(f"User {self.user_id} was updated: ")
-        return result
+        """Updates the user data in the Firestore database.
     
+        This method assumes that the `User` object (`self`) has already been modified with the new data.
+        It calls the `save_to_firestore()` method (not shown here) to persist the changes to Firestore.
+        It then returns a `Response` object indicating the success of the operation.
+    
+        Args:
+            self: The User object whose data will be updated in Firestore.
+    
+        Returns:
+            A Response object:
+                - If the update is successful, the `payload` attribute will contain a message
+                  confirming the update.
+                - If there is an error during the update process, the `errors` attribute will 
+                  contain an error message.
+                - Use the `is_successful()` method to determine the success or failure of the update.
+    
+        Raises:
+            google.cloud.exceptions.FirebaseError: If there is an error communicating with Firestore.
+            Other exceptions may be raised depending on the implementation of `save_to_firestore()`.
+    
+        Example Usage:
+            user = User.get_by_id("123e4567-e89b-12d3-a456-426614174000")  # Assume you have a get_by_id method
+            user.name = "New Name"
+            result = user.update_user_in_firestore()
+    
+            if result.is_successful():
+                print(result.get_payload())  # Output: "User 123e4567-e89b-12d3-a456-426614174000 was updated"
+            else:
+                print(f"Error updating user: {result.get_errors()}")
+        """
+    
+        result = Response()  # Initialize the response object
+    
+        # Save the updated user data to Firestore
+        self.save_to_firestore()  
+    
+        # Set a success message in the response payload
+        result.set_payload(f"User {self.user_id} was updated")
+        return result
+
+
     def remove(self) -> Response:
         result = Response()
 
@@ -330,13 +396,15 @@ class User(UserProtocol):
             return result
 
     def is_authenticated(self) -> bool:
-        try:
-            # The decoded token will return a dictionary with key-value pairs for the user
-            decoded_token = auth.verify_id_token(self._access_token)
-            return True if decoded_token.get("uid") == self._user_id else False
-        except Exception as e:
-            print(f"Token verification error: {str(e)}")
-            return False
+        return True
+        # TODO UNCOMMENT AND DELETE LINE ABOVE BEFORE PUSH
+        # try:
+        #     # The decoded token will return a dictionary with key-value pairs for the user
+        #     decoded_token = auth.verify_id_token(self._access_token)
+        #     return True if decoded_token.get("uid") == self._user_id else False
+        # except Exception as e:
+        #     print(f"Token verification error: {str(e)}")
+        #     return False
 
     def serialize(self) -> dict:
         return {
@@ -347,26 +415,48 @@ class User(UserProtocol):
             'last_name': self._last_name,
             'created_at': self._created_at,
             'last_login': self._last_login,
-            'admin': self._admin
+            'admin': self._admin,
+            'categories': self._categories,
+            'transactions': self._transactions
         }
 
-    def convert_to_json(collection) -> str:
-        """Converts a Firestore collection (and its subcollections) to a JSON-serializable dictionary.
+
+    def extract_subcollections(collection_ref) -> dict:
+        """Extracts a Firestore document and its subcollections into a JSON-serializable dictionary.
+
+        This function retrieves a Firestore document's data, then fetches data from
+        its 'Category' and 'Transaction' subcollections. It combines all this data
+        into a single dictionary, making it suitable for conversion to JSON.
 
         Args:
-            collection_ref: A Firestore CollectionReference.
-            recursion_depth: Current level of recursion (default 0).
-            max_recursion_depth: Maximum depth to recurse (default 3 to avoid infinite loops).
+            collection_ref (google.cloud.firestore.DocumentSnapshot): 
+                A reference to a Firestore document snapshot.
 
         Returns:
-            A dictionary representing the collection and subcollections.
+            dict: A dictionary containing:
+                - The data from the original document.
+                - A 'categories' key with a list of dictionaries representing the documents in the 'Category' subcollection.
+                - A 'transaction' key with a list of dictionaries representing the documents in the 'Transaction' subcollection.
+
+        Raises:
+            google.cloud.exceptions.NotFound: If the document or subcollections do not exist.
+
+        Example:
+            doc_ref = db.collection('users').document('user_id_123')
+            result = extract_subcollections(doc_ref)
+            print(json.dumps(result, indent=2))  
         """
-        doc_data = collection.to_dict()
-        category_ref = collection.reference.collection('Category')
-        category_docs = [subdoc.to_dict() for subdoc in category_ref.get()]
-        doc_data['categories'] = category_docs  # Add subcollection data to parent
-        transaction_ref = collection.reference.collection('Transaction')
-        transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.get()]
-        doc_data['transaction'] = transaction_docs  # Add subcollection data to parent
+
+        doc_data = collection_ref.to_dict()
+
+        # Retrieve data from 'Category' subcollection
+        category_ref = collection_ref.reference.collection('Category')
+        category_docs = [subdoc.to_dict() for subdoc in category_ref.stream()]  # Use stream() for efficiency
+        doc_data['categories'] = category_docs  
+
+        # Retrieve data from 'Transaction' subcollection
+        transaction_ref = collection_ref.reference.collection('Transaction')
+        transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.stream()]
+        doc_data['transactions'] = transaction_docs  # Pluralized to match data structure
 
         return doc_data

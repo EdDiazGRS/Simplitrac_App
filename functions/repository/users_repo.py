@@ -9,7 +9,7 @@ def create_user(user: User) -> Response:
     This creates a brand new user in the database
     """
 
-    result: Response = Response()
+    # result: Response = Response()
     if not user.user_id:
         user.user_id = "".join(random.choices(string.ascii_letters+string.digits, k=16))
     result = user.save_to_firestore()
@@ -17,17 +17,10 @@ def create_user(user: User) -> Response:
     return result
 
 
-def update_user(user_id: str, user: User) -> Response:
-    """
-    This creates a brand new user in the database
-    """
-
-    result = user.update_user_in_firestore()
-
-    return result
-
-
 def find_user(user_id: str) -> Response:
+    """
+    This finds an existing user in the database
+    """
     find_result: Response = User.find(user_id)
 
     if not find_result.is_successful():
@@ -35,6 +28,17 @@ def find_user(user_id: str) -> Response:
         return find_result
     else:
         return find_result
+
+
+def update_user(user_id: str, user: User) -> Response:
+    """
+    This updated an existing user in the database
+    """
+
+    result = user.update_user_in_firestore()
+
+    return result
+
 
 def delete_user(user_id: str) -> Response:
     user = find_user(user_id)

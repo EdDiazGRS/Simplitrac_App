@@ -9,6 +9,19 @@ def add_new_user(user: User) -> Response:
     return result
 
 
+def get_existing_user(user_id: str) -> Response:
+    """
+    This retrieves an existing user in the database
+    """
+
+    search_result = users_repo.find_user(user_id)
+    if search_result.is_successful():
+        return search_result
+    else:
+        search_result.set_errors("This user does not exist")
+        return search_result
+
+
 def update_user(user_id: str, user: User) -> Response:
     """
     This creates a brand new user in the database
@@ -25,18 +38,7 @@ def update_user(user_id: str, user: User) -> Response:
     else:
         return result
 
-def get_existing_user(user_id: str) -> Response:
-    """
-    This retrieves an existing user in the database
-    """
 
-    search_result = users_repo.find_user(user_id)
-    if search_result.is_successful():
-        return search_result
-    else:
-        search_result.set_errors("This user does not exist")
-        return search_result
-    
 def delete_user(user_id: str) -> Response:
     """
     This deletes an existing user in the database
