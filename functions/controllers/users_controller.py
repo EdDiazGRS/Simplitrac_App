@@ -58,18 +58,17 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
-    # TODO UNCOMMENT BEFORE PUSH
-    # if not access_token:
-    #     return generate_http_response("A token is needed to access this resource", 400)
+    if not access_token:
+        return generate_http_response("A token is needed to access this resource", 400)
 
-    # try:
-    #     if not user_instance.is_authenticated():
-    #         response.add_error("User could not be authenticated")
-    #         return generate_http_response(response.get_errors(), 400)
+    try:
+        if not user_instance.is_authenticated():
+            response.add_error("User could not be authenticated")
+            return generate_http_response(response.get_errors(), 400)
 
-    # except Exception as e:
-    #     response.add_error("There was an issue authenticating the user")
-    #     return generate_http_response(response.get_errors(), 400)
+    except Exception as e:
+        response.add_error("There was an issue authenticating the user")
+        return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
     
@@ -101,7 +100,7 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     if get_result.is_successful():
         return https_fn.Response(f"User {response.get_payload()['user_id']} found.", 200)
     else:
-        return generate_http_response(get_result.get_errors(), 400)
+        return generate_http_response(f"{get_result.get_errors()}", 400)
 
 
 @cors_enabled_function
@@ -177,7 +176,7 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
             return generate_http_response('user_id parameter is required', 400)
 
     except ValueError as e:
-        return generate_http_response(f'Invalid user_id format: {e}', 400)
+        return generate_http_response(f'Invalid user_id: {e}', 400)
 
     get_result = users_service.delete_user(user_id)
 

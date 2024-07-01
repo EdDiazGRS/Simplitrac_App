@@ -45,9 +45,11 @@ def delete_user(user_id: str) -> Response:
     """
     
     search_result = users_repo.find_user(user_id)
-    print(search_result)
     if search_result.is_successful():
-        delete_result = users_repo.delete_user(user_id)
+        user_instance = User()
+        for k, v in search_result.get_payload().items():  # Serialize data
+            setattr(user_instance, k, v)
+        delete_result = users_repo.delete_user(user_instance)
         return delete_result
     else:
         search_result.set_errors("This user does not exist")
