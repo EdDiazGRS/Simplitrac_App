@@ -114,7 +114,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         else:
             return generate_http_response('There was an error parsing the json string', 400)
 
-    if user_id != user_instance.user_id:
+    if user_id != user_instance['user_id']:
         return generate_http_response("Param user_id and the user_id in the body do not match", 400)
 
     # iterate through params send on https req to find updated information
@@ -145,11 +145,11 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response('user_id parameter is required', 400)
 
     get_result = users_service.get_existing_user(user_id)
-    user_instance = get_result.get_payload()
-    user_json = json.dumps(user_instance, cls=user.UserEncoder)
-    # gotten_user: user.User = (user_json)
+    user_instance: user.User = get_result.get_payload()
+    response = Response()
+    response.set_payload(user_instance)
     if get_result.is_successful():
-        return https_fn.Response(user_json, 200)
+        return https_fn.Response(f"User {response.get_payload()['user_id']} found.", 200)
     else:
         return generate_http_response(get_result.get_errors(), 400)
 

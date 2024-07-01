@@ -83,6 +83,8 @@ class User(UserProtocol):
         self._created_at = data.get('created_at')
         self._last_login = data.get('last_login')
         self._admin = data.get('admin')
+        # for k, v in data.items():
+        #     setattr(self, k, v)
 
         if 'transactions' in data:
             self._transactions = [Transaction(tx) for tx in data['transactions']]
@@ -288,47 +290,45 @@ class User(UserProtocol):
         response.set_payload(response_payload)
 
         return response
-
+    
     @staticmethod
     def find(user_id: str) -> Response:
         result = Response()
 
-        documents: [any] = db.collection(User.class_name).where('user_id', "==", user_id).get()
-        # if len(documents) == 0:
-        #     result.add_error(f"A user with this id (${user_id} doesn't exist.")
-        #     return result
-        # else:
-        #     # adding subcollections
-        #     all_data = []
-        #     # docs = documents.stream()
-        print("documents")
-        print(documents)
-        result.set_payload(convert_to_json(documents))
-        print("convert_to_json() result")
-        print(result)
-        # test = marshal.loads(result.get_payload())
-        # print(test)
-        return result
+        documents = db.collection(User.class_name).where('user_id', "==", user_id).get()
+        match len(documents):
+            case 0:
+                result.add_error(f"A user with id ${user_id} doesn't exist.")
+                return result
+            case 1:
+                # adding subcollections
+                # all_data = []
 
-            # for doc in documents:
-            #     doc_data = doc.to_dict()
-            #     category_ref = doc.reference.collection('Category')
-            #     category_docs = [subdoc.to_dict() for subdoc in category_ref.get()]
-            #     doc_data['categories'] = category_docs  # Add subcollection data to parent
-            #     transaction_ref = doc.reference.collection('Transaction')
-            #     transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.get()]
-            #     doc_data['transaction'] = transaction_docs  # Add subcollection data to parent
-            #     all_data.append(doc_data)
+                # doc_data = documents[0].to_dict()
+                # category_ref = documents[0].reference.collection('Category')
+                # category_docs = [subdoc.to_dict() for subdoc in category_ref.get()]
+                # doc_data['categories'] = category_docs  # Add subcollection data to parent
+                # transaction_ref = documents[0].reference.collection('Transaction')
+                # transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.get()]
+                # doc_data['transaction'] = transaction_docs  # Add subcollection data to parent
+                # print("doc_data")
+                # print(doc_data)
+                # all_data.append(doc_data)
 
-            # print("all_data")
-            # print(all_data)
-            # # print(f"Here is the document: {documents[0]}")
-            # # user: Dict[str, str] = documents[0].to_dict()
-            # # print(f"Here is the user: {user}")
-            # result.set_payload(convert_to_json(all_data[0]))
-            # return result
+                # print("all_data")
+                # print(all_data)
+                # print(f"Here is the document: {documents[0]}")
+                # user: Dict[str, any] = all_data.to_dict()
+                # print(f"Here is the user: {user}")
+                # result.set_payload(user)
+                # print(result)
 
-    
+                result.set_payload(User.convert_to_json(documents[0]))
+
+                return result
+            case _:
+                result.add_error(F"More than user with is ${user_id} exists.")
+
     def update_user_in_firestore(self) -> Response:
         result = Response()
 
@@ -373,15 +373,7 @@ class User(UserProtocol):
             'admin': self._admin
         }
 
-class UserEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, User):
-            return obj.__dict__
-        return super().default(obj)
-#from pymarshaler.marshal import Marshal
-
-
-def convert_to_json(collection_ref, recursion_depth=0, max_recursion_depth=3):
+    def convert_to_json(collection) -> str:
         """Converts a Firestore collection (and its subcollections) to a JSON-serializable dictionary.
 
         Args:
@@ -392,31 +384,84 @@ def convert_to_json(collection_ref, recursion_depth=0, max_recursion_depth=3):
         Returns:
             A dictionary representing the collection and subcollections.
         """
-        data = []
-        print("collection_ref")
-        print(collection_ref)
-        for doc in collection_ref:
-            print("doc")
-            print(doc)
-            doc_data = doc.to_dict()
-            print("doc_data")
-            print(doc_data)
+        # all_data = []
+
+        doc_data = collection.to_dict()
+        category_ref = collection.reference.collection('Category')
+        category_docs = [subdoc.to_dict() for subdoc in category_ref.get()]
+        doc_data['categories'] = category_docs  # Add subcollection data to parent
+        transaction_ref = collection.reference.collection('Transaction')
+        transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.get()]
+        doc_data['transaction'] = transaction_docs  # Add subcollection data to parent
+        print("doc_data")
+        print(doc_data)
+        # all_data.append(doc_data)
+        # print("all_data")
+        # print(all_data)
+        # print(f"Here is the document: {collection}")
+        # user = User._initialize_from_data(User, all_data)
+        # print(f"Here is the user: {user}")
+
+        return doc_data
+
+# # Example Usage
+# db = firestore.Client()
+
+# # Reference to the collection
+# collection_ref = db.collection('your_collection_name')
+
+# # Fetch and convert data
+# json_data = firestore_collection_to_json(collection_ref)
+
+# # Save JSON to a file (optional)
+# with open("output.json", "w") as outfile:
+#     json.dump(json_data, outfile, indent=2)
 
 
-            # Recursively get subcollections if depth allows
-            if recursion_depth < max_recursion_depth:
-                for subcol in doc.reference.collections():
-                    subcol_name = subcol.id
-                    print(subcol_name)
-                    print(subcol)
-                    print(doc_data[subcol_name])
-                    doc_data[subcol_name] = convert_to_json(
-                        doc_data[subcol], recursion_depth + 1, max_recursion_depth
-                    )
+        # """Converts a Firestore collection (and its subcollections) to a JSON-serializable dictionary.
 
-            data.append(doc_data)
+        # Args:
+        #     collection_ref: A Firestore CollectionReference.
+        #     recursion_depth: Current level of recursion (default 0).
+        #     max_recursion_depth: Maximum depth to recurse (default 3 to avoid infinite loops).
 
-        return data
+        # Returns:
+        #     A dictionary representing the collection and subcollections.
+        # """
+        # data = []
+        # print("collection_ref")
+        # print(collection_ref)
+        # for doc in collection_ref:
+        #     print("doc")
+        #     print(doc)
+        #     doc_data = doc.to_dict()
+        #     print("doc_data")
+        #     print(doc_data)
+        #     print("doc.reference.collections()")
+        #     print(doc.reference.collections())
+
+        #     # Recursively get subcollections if depth allows
+        #     if recursion_depth < max_recursion_depth:
+        #         # print(dir(doc.reference.collections()))
+        #         for subcol in doc.reference.collections():
+        #             # subcol_name = subcol.id
+        #             # attr = dir(subcol)
+        #             # for a in attr:
+        #             #     print(a)
+        #             #     print(getattr(subcol, a))
+        #             # for sub in subcol.stream():
+        #             #     print(sub)
+        #             #     print(sub.id)
+        #             # print(subcol_name)
+        #             print(subcol.id)
+        #             print(subcol)
+        #             # doc_data[subcol_name] = convert_to_json(
+        #             #     doc_data[subcol], recursion_depth + 1, max_recursion_depth
+        #             # )
+
+        #     data.append(doc_data)
+
+        # return data
 
 # collection_ref = db.collection("your_collection_name")
 # json_data = convert_firestore_collection_to_json(collection_ref)
