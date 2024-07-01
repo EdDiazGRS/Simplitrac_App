@@ -1,5 +1,3 @@
-import uuid
-
 from firebase_functions import https_fn
 from models import user
 from services import users_service
@@ -7,9 +5,6 @@ from models.response import Response
 from urllib.parse import parse_qs
 from typing import Union
 import json
-from flask import jsonify
-
-
 from functools import wraps
 
 
@@ -58,7 +53,6 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
         pass
 
     if data:
-        print(data)
         user_instance = user.User(data)
         access_token = user_instance.access_token
     else:
@@ -86,71 +80,86 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
 
 @cors_enabled_function
 @https_fn.on_request()
-def update_user(req: https_fn.Request) -> https_fn.Response:
-    """
-    Update a user in the database
-
-    :param req: The request must have a user_id param in the query string and the updated user object in the body
-    :return: https_fn.Response
-    """
-    user_instance = None
-    user_id, params = get_user_id(req.query_string.decode())
-
-    
-    if not user_id:
-        return generate_http_response('user_id parameter is required', 400)
-
-    try:
-        # request_data = req.get_json(silent=False)
-        request_data = users_service.get_existing_user(user_id)
-        if request_data is None:
-            raise ValueError("Empty JSON body")
-        user_instance = request_data.get_payload()
-
-    except Exception as e:
-        if isinstance(e, ValueError):
-            return generate_http_response('body must be provided', 400)
-        else:
-            return generate_http_response('There was an error parsing the json string', 400)
-
-    if user_id != user_instance.user_id:
-        return generate_http_response("Param user_id and the user_id in the body do not match", 400)
-
-    # iterate through params send on https req to find updated information
-    for k, v in params.items():
-        if hasattr(user_instance, k) and getattr(user_instance, k) != v[0]:
-            setattr(user_instance, k, v[0])
-            
-    # return https_fn.Response(f"{user_id} for this user: {user.serialize()}")
-    update_result = users_service.update_user(user_id, user_instance)
-    if update_result.is_successful():
-        return https_fn.Response(update_result.get_payload(), 200)
-    else:
-        return generate_http_response(update_result.get_errors(), 400)
-
-
-@cors_enabled_function
-@https_fn.on_request()
 def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     """
     Retrieves existing user in the database
     :param req: The request must have a user_id param in the query string
     :return: https_fn.Response
     """
+    response = Response()
     user_instance = None
-    user_id, _ = get_user_id(req.query_string.decode())
+    user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
 
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
 
     get_result = users_service.get_existing_user(user_id)
-    user_instance = get_result.get_payload()
-    user_json = json.dumps(user_instance, cls=user.UserEncoder)
-    print(user_json)
+    user_instance: user.User = get_result.get_payload()
+    
+    response.set_payload(user_instance)
     if get_result.is_successful():
-        return https_fn.Response(user_json, 200)
+        return https_fn.Response(f"User {response.get_payload()['user_id']} found.", 200)
     else:
-        return generate_http_response(get_result.get_errors(), 400)
+        return generate_http_response(f"{get_result.get_errors()}", 400)
+
+
+@cors_enabled_function
+@https_fn.on_request()
+def update_user(req: https_fn.Request) -> https_fn.Response:
+    """
+    Updates an existing user's information in the database.
+
+    Args:
+        req (https_fn.Request): The HTTP request object containing the user_id and updated user data.
+
+    Returns:
+        https_fn.Response: An HTTP response indicating the success or failure of the update operation.
+
+    Raises:
+        ValueError: If the user_id is not a valid UUID or if the request body is not valid JSON.
+    """
+    data = None
+    access_token = None
+    user_id = None
+    user_instance = user.User()
+
+    try:
+        data = req.get_json()
+        if not data:  # Check for empty JSON
+            return generate_http_response('Request body must contain valid JSON data', 400)
+    except json.JSONDecodeError as e:  # Catch specific JSON decoding errors
+        return generate_http_response(f'Invalid JSON: {e}', 400)
+
+    try:
+        user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
+        if not user_id:  # Explicitly check for missing user_id
+            return generate_http_response('user_id parameter is required', 400)
+
+    except ValueError as e:
+        return generate_http_response(f'Invalid user_id: {e}', 400)
+
+    try:
+        user_dict = users_service.get_existing_user(user_id).get_payload()
+        user_dict.update(data)  # Update the dictionary
+        for k, v in user_dict.items():  # Serialize data
+            setattr(user_instance, k, v)
+
+    except Exception as e:  # Catch general exceptions for get_existing_user and User creation
+        return generate_http_response(str(e), 500)  # 500 Internal Server Error if unexpected
+
+    if user_id != user_instance.user_id:  # Ensure consistency between query and body
+        return generate_http_response("user_id in query and body do not match", 400)
+
+    if user_instance:
+        access_token = user_instance.access_token
+
+    update_result = users_service.update_user(user_id, user_instance)
+
+    if update_result.is_successful():
+        return https_fn.Response(update_result.get_payload(), 200)
+    else:
+        return generate_http_response(update_result.get_errors(), 400)
+
 
 
 @cors_enabled_function
@@ -161,10 +170,13 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
     :param req: The request must have a user_id param in the query string
     :return: https_fn.Response
     """
-    user_id, _ = get_user_id(req.query_string.decode())
+    try:
+        user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
+        if not user_id:  # Explicitly check for missing user_id
+            return generate_http_response('user_id parameter is required', 400)
 
-    if not user_id:
-        return generate_http_response('user_id parameter is required', 400)
+    except ValueError as e:
+        return generate_http_response(f'Invalid user_id: {e}', 400)
 
     get_result = users_service.delete_user(user_id)
 
@@ -173,13 +185,6 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
     else:
         return generate_http_response(get_result.get_errors(), 400)
         
-
-def get_user_id(query_string):
-    user_id: str = ""
-    params = parse_qs(query_string)
-    user_id = params.get('user_id', [None])[0]
-    return user_id, params
-
 
 def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
     if isinstance(message, list):
