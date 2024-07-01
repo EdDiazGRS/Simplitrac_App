@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Optional, Dict
 from datetime import datetime
 from google.cloud import vision
 from google.cloud import storage
@@ -32,10 +33,20 @@ def extract_text(image_path):
 
 def parse_receipt_text(text):
     """Parse the extracted text to find key data using regex and NLP."""
+    subtotal, tax, total = extract_total(text)
+    date = extract_date(text)
+    
+    print("Extracted Date:", date)
+    print("Extracted Subtotal:", subtotal)
+    print("Extracted Tax:", tax)
+    print("Extracted Total:", total)
+    
     data = {
-        "date": extract_date(text),
-        "total": extract_total(text),
-        "items": extract_items(text),
+        "date": date,
+        "subtotal": subtotal,
+        "tax": tax,
+        "total": total,
+    
     }
     return data
 
@@ -56,36 +67,83 @@ def extract_date(text):
             return match.group()
     return None
 
-def extract_total(text):
-    """Extract total amount using regex."""
-    total_patterns = [
-        r'\bTOTAL\s*[:\s]*\$?(\d+[.,]?\d*)\b',
-        r'\bAMOUNT\s*[:\s]*\$?(\d+[.,]?\d*)\b',
-        r'\bSUBTOTAL\s*[:\s]*\$?(\d+[.,]?\d*)\b',
-    ]
-    for pattern in total_patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            return match.group(1).replace(',', '')
-    return None
+def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
+    lines = text.split('\n')
+    data = {
+        'date': None,
+        'subtotal': None,
+        'tax': None,
+        'total': None,
+        'store_name': None,
+    }
 
-def extract_items(text):
-    """Extract items using NLP techniques."""
-    stop_words = set(stopwords.words('english'))
-    sentences = sent_tokenize(text)
-    items = []
-    item_section = False
-    for sentence in sentences:
-        if "subtotal" in sentence.lower():
-            item_section = False
-        if item_section:
-            words = word_tokenize(sentence)
-            words = [word for word in words if word.lower() not in stop_words and word.isalpha()]
-            if len(words) > 1:  # Assuming item descriptions are usually more than one word
-                items.append(' '.join(words))
-        if "produce" in sentence.lower() or "items" in sentence.lower():
-            item_section = True
-    return items
+    # Extract store name (usually in the first few lines)
+    for i, line in enumerate(lines[:5]):
+        if len(line.strip()) > 0 and not re.search(r'\d', line):  # Look for non-empty lines without numbers
+            data['store_name'] = line.strip()
+            break
+        if i == 4 and not data['store_name']:  # If no store name found in first 5 lines, use the first non-empty line
+            for line in lines:
+                if len(line.strip()) > 0:
+                    data['store_name'] = line.strip()
+                    break
+
+    # Extract date
+    date_pattern = r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b'
+    for line in lines:
+        date_match = re.search(date_pattern, line)
+        if date_match:
+            data['date'] = date_match.group()
+            break
+
+    # Extract subtotal, tax, and total
+    subtotal_found = False
+    for i, line in enumerate(lines):
+        # Subtotal
+        if re.search(r'\b(Subtotal|Sub[ -]?total|Items\s+Subtotal)\b', line, re.IGNORECASE) and not subtotal_found:
+            subtotal_match = re.search(r'\$?(\d+\.\d{2})', line)
+            if subtotal_match:
+                data['subtotal'] = subtotal_match.group(1)
+                subtotal_found = True
+            elif i + 1 < len(lines):
+                subtotal_match = re.search(r'\$?(\d+\.\d{2})', lines[i+1])
+                if subtotal_match:
+                    data['subtotal'] = subtotal_match.group(1)
+                    subtotal_found = True
+
+        # Tax
+        if re.search(r'\b(Tax|Sales\s+Tax)\b', line, re.IGNORECASE):
+            tax_match = re.search(r'\$?(\d+\.\d{2})', line)
+            if tax_match:
+                data['tax'] = tax_match.group(1)
+            elif i + 1 < len(lines):
+                tax_match = re.search(r'\$?(\d+\.\d{2})', lines[i+1])
+                if tax_match:
+                    data['tax'] = tax_match.group(1)
+
+        # Total
+        if re.search(r'\b(Total|Grand\s+Total)\b', line, re.IGNORECASE):
+            total_matches = re.findall(r'\$?(\d+\.\d{2})', line)
+            if total_matches:
+                data['total'] = total_matches[-1]  # Take the last match if multiple found
+            elif i + 1 < len(lines):
+                total_matches = re.findall(r'\$?(\d+\.\d{2})', lines[i+1])
+                if total_matches:
+                    data['total'] = total_matches[-1]  # Take the last match if multiple found
+
+    # If tax is not found, try to calculate it
+    if data['subtotal'] and data['total'] and not data['tax']:
+        try:
+            subtotal = float(data['subtotal'])
+            total = float(data['total'])
+            calculated_tax = total - subtotal
+            data['tax'] = f"{calculated_tax:.2f}"
+        except ValueError:
+            pass
+
+    return data
+   
+
 
 def store_receipt_data(collection_name, document_data):
     """Stores the parsed receipt data into Firestore."""
@@ -94,9 +152,12 @@ def store_receipt_data(collection_name, document_data):
 
 # Test the updated code with the provided images
 if __name__ == "__main__":
-    image_paths = ["/Users/eddiaz/Desktop/SimpliTrac/functions/services/In_1.jpg", "/Users/eddiaz/Desktop/SimpliTrac/functions/services/R_2.jpg"]
+    image_paths = ["/Users/eddiaz/Desktop/SimpliTrac/functions/services/R3.jpg"]
     for image_path in image_paths:
         text = extract_text(image_path)
-        print("Extracted text:", text)
-        parsed_data = parse_receipt_text(text)
-        print("Parsed Receipt Data:", parsed_data)
+        print("Extracted text:")
+        print(text)
+        print("\nParsing receipt data...")
+        parsed_data = extract_receipt_data(text)
+        print("\nParsed Receipt Data:", parsed_data)
+
