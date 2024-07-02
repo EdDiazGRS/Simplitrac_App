@@ -73,22 +73,21 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
-    # if not access_token:
-    #     return generate_http_response("A token is needed to access this resource", 400)
+    if not access_token:
+        return generate_http_response("A token is needed to access this resource", 400)
 
-    # try:
-    #     if not user_instance.is_authenticated():
-    #         response.add_error("User could not be authenticated")
-    #         return generate_http_response(response.get_errors(), 400)
+    try:
+        if not user_instance.is_authenticated():
+            response.add_error("User could not be authenticated")
+            return generate_http_response(response.get_errors(), 400)
 
-    # except Exception as e:
-    #     response.add_error("There was an issue authenticating the user")
-    #     return generate_http_response(response.get_errors(), 400)
+    except Exception as e:
+        response.add_error("There was an issue authenticating the user")
+        return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
-    print(response)
     if response.is_successful():
-        return https_fn.Response(f"Message with ID {response.get_payload()} added.")
+        return https_fn.Response(f"User {user_instance.user_id} was created.")
     else:
         return https_fn.Response(f'There was an error: {response.get_errors()}')
 
@@ -173,10 +172,8 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
     update_result = users_service.update_user(user_id, user_instance)
 
-    print(update_result.get_payload())
-
     if update_result.is_successful():
-        return https_fn.Response(update_result.get_payload(), 200)
+        return https_fn.Response(f"User {user_id} updated.", 200)
     else:
         return generate_http_response(update_result.get_errors(), 400)
 
@@ -203,7 +200,7 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
     get_result = users_service.delete_user(user_id)
     
     if get_result.is_successful():
-        return https_fn.Response(f"User with ID {user_id} deleted.")
+        return https_fn.Response(f"User {user_id} deleted.")
     else:
         return generate_http_response(get_result.get_errors(), 400)
         
@@ -242,8 +239,3 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
 #         }
 #         return https_fn.Response('', 204, headers)
 #     return None
-
-
-
-# TODO make sure that all responses are user_dict
-# TODO return string for update confirmation
