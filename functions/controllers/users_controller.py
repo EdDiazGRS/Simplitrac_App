@@ -87,7 +87,7 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
 
     response: Response = users_service.add_new_user(user_instance)
     if response.is_successful():
-        return https_fn.Response(f"User {user_instance.user_id} was created.")
+        return https_fn.Response(response.get_payload())
     else:
         return https_fn.Response(f'There was an error: {response.get_errors()}')
 
