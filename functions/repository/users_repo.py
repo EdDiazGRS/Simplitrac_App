@@ -40,6 +40,6 @@ def update_user(user_id: str, user: User) -> Response:
     return result
 
 
-def delete_user(user_instance: User) -> Response:
-    return user_instance.remove()
+def delete_user(user_id: str) -> Response:
+    return User.remove(user_id)
 

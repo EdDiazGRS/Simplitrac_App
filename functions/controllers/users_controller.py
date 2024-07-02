@@ -1,5 +1,6 @@
 from firebase_functions import https_fn
 from models import user
+
 from services import users_service
 from models.response import Response
 from urllib.parse import parse_qs
@@ -58,20 +59,20 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
-    if not access_token:
-        return generate_http_response("A token is needed to access this resource", 400)
+    # if not access_token:
+    #     return generate_http_response("A token is needed to access this resource", 400)
 
-    try:
-        if not user_instance.is_authenticated():
-            response.add_error("User could not be authenticated")
-            return generate_http_response(response.get_errors(), 400)
+    # try:
+    #     if not user_instance.is_authenticated():
+    #         response.add_error("User could not be authenticated")
+    #         return generate_http_response(response.get_errors(), 400)
 
-    except Exception as e:
-        response.add_error("There was an issue authenticating the user")
-        return generate_http_response(response.get_errors(), 400)
+    # except Exception as e:
+    #     response.add_error("There was an issue authenticating the user")
+    #     return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
-    
+    print(response)
     if response.is_successful():
         return https_fn.Response(f"Message with ID {response.get_payload()} added.")
     else:
@@ -87,20 +88,20 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     :return: https_fn.Response
     """
     response = Response()
-    user_instance = None
     user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
 
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
-
-    get_result = users_service.get_existing_user(user_id)
-    user_instance: user.User = get_result.get_payload()
     
-    response.set_payload(user_instance)
-    if get_result.is_successful():
-        return https_fn.Response(f"User {response.get_payload()['user_id']} found.", 200)
-    else:
-        return generate_http_response(f"{get_result.get_errors()}", 400)
+    user_instance = user.User(user_id)
+
+    if not user_instance.user_id:
+        return generate_http_response(f"User {user_id} not found", 400)
+
+    response.set_payload(user_instance.serialize(True))
+    print(response)
+    return https_fn.Response(f"User {(response.get_payload())} found.", 200)
+        
 
 
 @cors_enabled_function
@@ -139,10 +140,9 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(f'Invalid user_id: {e}', 400)
 
     try:
-        user_dict = users_service.get_existing_user(user_id).get_payload()
+        user_dict = users_service.get_existing_user(user_id).get_payload().to_dict()
         user_dict.update(data)  # Update the dictionary
-        for k, v in user_dict.items():  # Serialize data
-            setattr(user_instance, k, v)
+        user_instance = user.User(user_dict)
 
     except Exception as e:  # Catch general exceptions for get_existing_user and User creation
         return generate_http_response(str(e), 500)  # 500 Internal Server Error if unexpected
@@ -154,6 +154,8 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         access_token = user_instance.access_token
 
     update_result = users_service.update_user(user_id, user_instance)
+
+    print(update_result.get_payload())
 
     if update_result.is_successful():
         return https_fn.Response(update_result.get_payload(), 200)
@@ -179,7 +181,7 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(f'Invalid user_id: {e}', 400)
 
     get_result = users_service.delete_user(user_id)
-
+    
     if get_result.is_successful():
         return https_fn.Response(f"User with ID {user_id} deleted.")
     else:
@@ -211,3 +213,8 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
 #         }
 #         return https_fn.Response('', 204, headers)
 #     return None
+
+
+
+# TODO make sure that all responses are user_dict
+# TODO return string for update confirmation
