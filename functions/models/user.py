@@ -100,21 +100,24 @@ class User(UserProtocol):
         if user_doc.exists:
             user_data = user_doc.to_dict()
             self._initialize_from_data(user_data)
-            self._user_id = user_id
-            self._fetch_subcollections()
-
-    def _fetch_subcollections(self) -> None:
+            self._fetch_subcollections(user_data)
+           
+    def _fetch_subcollections(self, user_data) -> None:
         """
-        Fetches and initializes the transactions and categories subcollections from Firestore.
+        Fetches and initializes the transactions and categories subcollections from Firestore,
+        adding them to the `user_data` dictionary.
         """
         if self._user_id:
             transactions_ref = db.collection(self.class_name).document(str(self._user_id)).collection('Transaction')
             transaction_docs = transactions_ref.stream()
-            self._transactions = [Transaction(doc.to_dict()) for doc in transaction_docs]
+            # user_data['transactions'] = [doc.to_dict() for doc in transaction_docs]
+            self._transactions.extend(doc.to_dict() for doc in transaction_docs)
 
             categories_ref = db.collection(self.class_name).document(str(self._user_id)).collection('Category')
             category_docs = categories_ref.stream()
-            self._categories = [Category(doc.to_dict()) for doc in category_docs]
+            # user_data['categories'] = [doc.to_dict() for doc in category_docs]
+            self._categories.extend(doc.to_dict() for doc in category_docs)
+
 
     @property
     def user_id(self) -> Optional[str]:
@@ -253,7 +256,7 @@ class User(UserProtocol):
         try:
             # Save to User collection
             user_ref = db.collection(self.class_name).document(str(self._user_id))
-            user_ref.set(self.serialize())
+            user_ref.set(self.serialize(False)) # not getting_existing_user()
 
             # Save transactions to Transaction subcollection
             transactions_ref = user_ref.collection(Transaction.class_name)
@@ -281,7 +284,7 @@ class User(UserProtocol):
             categories_list.append(cat.serialize())
 
         # Set the payload with detailed saved information
-        response_payload = self.serialize()
+        response_payload = self.serialize(False) # not getting_existing_user()
         response_payload['transactions'] = transactions_list
         response_payload['categories'] = categories_list
         response.set_payload(response_payload)
@@ -331,7 +334,7 @@ class User(UserProtocol):
             case 0:  # No user found
                 result.add_error(f"A user with id {user_id} doesn't exist.")
             case 1:  # Single user found
-                user_instance: User = User.extract_subcollections(documents[0])
+                user_instance = documents[0]
                 result.set_payload(user_instance)
             case _:  # Multiple users found (shouldn't happen with unique IDs)
                 result.add_error(f"More than one user with id {user_id} exists.")
@@ -382,18 +385,22 @@ class User(UserProtocol):
         return result
 
 
-    def remove(self) -> Response:
+    def remove(user_id: str) -> Response:
         result = Response()
 
-        documents: [any] = db.collection(User.class_name).where('user_id', "==", self.user_id).get()
-        if len(documents) == 0:
-            result.add_error(f"A user with this id (${self.user_id} doesn't exist.")
-            return result
-        else:
-            for doc in documents:
-                doc.reference.delete()
-            result.set_payload(f"This user was deleted: {self.user_id}")
-            return result
+        documents = db.collection(User.class_name).where('user_id', "==", user_id).get()
+
+        match len(documents):
+            case 0:  # No user found
+                result.add_error(f"A user with id {user_id} doesn't exist.")
+            case 1:  # Single user found
+                documents[0].reference.delete()
+                result.set_payload(f"This user was deleted: {user_id}")
+            case _:  # Multiple users found (shouldn't happen with unique IDs)
+                result.add_error(f"More than one user with id {user_id} exists.")
+
+        return result
+
 
     def is_authenticated(self) -> bool:
         try:
@@ -404,19 +411,31 @@ class User(UserProtocol):
             print(f"Token verification error: {str(e)}")
             return False
 
-    def serialize(self) -> dict:
-        return {
-            'user_id': self._user_id,
-            'access_token': self._access_token,
-            'email': self._email,
-            'first_name': self._first_name,
-            'last_name': self._last_name,
-            'created_at': self._created_at,
-            'last_login': self._last_login,
-            'admin': self._admin,
-            'categories': self._categories,
-            'transactions': self._transactions
-        }
+    def serialize(self, getting_user: bool) -> dict:
+        if getting_user:
+            return {
+                'user_id': self._user_id,
+                'access_token': self._access_token,
+                'email': self._email,
+                'first_name': self._first_name,
+                'last_name': self._last_name,
+                'created_at': self._created_at,
+                'last_login': self._last_login,
+                'admin': self._admin,
+                'categories': self._categories,
+                'transactions': self._transactions
+            }
+        else:
+                        return {
+                'user_id': self._user_id,
+                'access_token': self._access_token,
+                'email': self._email,
+                'first_name': self._first_name,
+                'last_name': self._last_name,
+                'created_at': self._created_at,
+                'last_login': self._last_login,
+                'admin': self._admin
+            }
 
 
     def extract_subcollections(collection_ref) -> dict:
