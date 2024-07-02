@@ -10,6 +10,16 @@ from functools import wraps
 
 
 def cors_enabled_function(func):
+    """Decorator for enabling Cross-Origin Resource Sharing (CORS) on Firebase HTTP functions.
+
+    This decorator adds the necessary CORS headers to allow cross-origin requests 
+    to your Firebase function endpoints. It handles both the preflight OPTIONS 
+    request and modifies the response headers of the decorated function to ensure 
+    proper CORS support.
+
+    Args:
+        func: The Firebase HTTP function to be wrapped.
+    """
     @wraps(func)
     def wrapper(req, *args, **kwargs):
         if req.method == 'OPTIONS':
@@ -33,14 +43,18 @@ def cors_enabled_function(func):
     return wrapper
 
 
+# Firebase HTTP Function Handlers 
 @cors_enabled_function
 @https_fn.on_request()
 def create_new_user(req: https_fn.Request) -> https_fn.Response:
-    """
-    Save a new user in the database
+    """Creates a new user in the Firestore database.
 
-    :param req: The request must have the user object in the body
-    :return: https_fn.Response
+    Args:
+        req (https_fn.Request): The HTTP request object containing the new user data in JSON format.
+
+    Returns:
+        https_fn.Response: An HTTP response indicating success or failure, containing the ID of the new user
+                           or an error message.
     """
     data = None
     user_instance = None
@@ -82,10 +96,14 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
 @cors_enabled_function
 @https_fn.on_request()
 def get_existing_user(req: https_fn.Request) -> https_fn.Response:
-    """
-    Retrieves existing user in the database
-    :param req: The request must have a user_id param in the query string
-    :return: https_fn.Response
+    """Retrieves an existing user from the database.
+
+    Args:
+        req (https_fn.Request): The HTTP request object containing the `user_id` in the query string.
+
+    Returns:
+        https_fn.Response: An HTTP response containing the serialized user data or an error message
+                           if the user is not found.
     """
     response = Response()
     user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
@@ -99,7 +117,6 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(f"User {user_id} not found", 400)
 
     response.set_payload(user_instance.serialize(True))
-    print(response)
     return https_fn.Response(f"User {(response.get_payload())} found.", 200)
         
 
@@ -107,17 +124,18 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
 @cors_enabled_function
 @https_fn.on_request()
 def update_user(req: https_fn.Request) -> https_fn.Response:
-    """
-    Updates an existing user's information in the database.
+    """Updates an existing user in the database.
 
     Args:
-        req (https_fn.Request): The HTTP request object containing the user_id and updated user data.
+        req (https_fn.Request): The HTTP request object containing:
+            - `user_id` in the query string.
+            - Updated user data in the request body (JSON format).
 
     Returns:
-        https_fn.Response: An HTTP response indicating the success or failure of the update operation.
+        https_fn.Response: An HTTP response indicating success or failure of the update operation.
 
     Raises:
-        ValueError: If the user_id is not a valid UUID or if the request body is not valid JSON.
+        ValueError: If the `user_id` format is invalid or if the request body is not valid JSON.
     """
     data = None
     access_token = None
@@ -163,14 +181,16 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(update_result.get_errors(), 400)
 
 
-
 @cors_enabled_function
 @https_fn.on_request()
 def delete_user(req: https_fn.Request) -> https_fn.Response:
-    """
-    Deletes user in the database
-    :param req: The request must have a user_id param in the query string
-    :return: https_fn.Response
+    """Deletes a user from the database.
+
+    Args:
+        req (https_fn.Request): The HTTP request object containing the `user_id` in the query string.
+
+    Returns:
+        https_fn.Response: An HTTP response indicating success or failure of the deletion.
     """
     try:
         user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
@@ -189,6 +209,15 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
         
 
 def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
+    """Generates an HTTP response with a JSON-formatted error message.
+
+    Args:
+        message (Union[str, list]): The error message (either a string or a list of strings).
+        code (int): The HTTP status code (e.g., 400 for Bad Request, 500 for Internal Server Error).
+
+    Returns:
+        https_fn.Response: The formatted HTTP response object.
+    """
     if isinstance(message, list):
         result_message: str = ""
         result_message = result_message.join(", ")

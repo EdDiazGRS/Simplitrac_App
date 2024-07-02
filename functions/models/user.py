@@ -72,14 +72,6 @@ class User(UserProtocol):
         Args:
             data (Dict[str, str]): The data to initialize the user.
         """
-        # self._user_id = data.get('user_id') if data.get('user_id') else ""
-        # self._access_token = data.get('access_token')
-        # self._email = data.get('email')
-        # self._first_name = data.get('first_name')
-        # self._last_name = data.get('last_name')
-        # self._created_at = data.get('created_at')
-        # self._last_login = data.get('last_login')
-        # self._admin = data.get('admin')
         for k, v in data.items():
             setattr(self, k, v)
 
@@ -386,23 +378,62 @@ class User(UserProtocol):
 
 
     def remove(user_id: str) -> Response:
+        """Removes a user from the Firestore database.
+    
+        This function searches for a user with the specified `user_id` in the 
+        Firestore collection designated by `User.class_name`. If a single matching user
+        is found, it is deleted. The function returns a `Response` object indicating 
+        the success or failure of the operation.
+    
+        Args:
+            user_id: The unique identifier (UUID) of the user to remove.
+    
+        Returns:
+            Response: An object indicating the outcome of the operation:
+                - If successful, the `payload` attribute will contain a message confirming the deletion.
+                - If the user is not found or if multiple users with the same ID exist (unexpected),
+                  the `errors` attribute will contain an error message.
+                - Use the `is_successful()` method to determine the outcome.
+    
+        Raises:
+            google.cloud.exceptions.FirebaseError: If there's an error communicating with Firestore.
+    
+        Example Usage:
+            result = remove("123e4567-e89b-12d3-a456-426614174000") 
+            if result.is_successful():
+                print(result.get_payload())  
+            else:
+                print(f"Error deleting user: {result.get_errors()}") 
+        """
         result = Response()
-
+        
+        # Query for the user document
         documents = db.collection(User.class_name).where('user_id', "==", user_id).get()
-
+    
         match len(documents):
             case 0:  # No user found
                 result.add_error(f"A user with id {user_id} doesn't exist.")
             case 1:  # Single user found
                 documents[0].reference.delete()
-                result.set_payload(f"This user was deleted: {user_id}")
-            case _:  # Multiple users found (shouldn't happen with unique IDs)
+                result.set_payload(f"User with id {user_id} was deleted.") # Updated message for consistency
+            case _:  # Multiple users found (unexpected for unique IDs)
                 result.add_error(f"More than one user with id {user_id} exists.")
-
+    
         return result
 
 
+
     def is_authenticated(self) -> bool:
+        """Verifies if the user is authenticated using a Firebase ID token.
+
+        This method attempts to verify the `access_token` associated with the user
+        using Firebase Authentication. It compares the user ID (UID) extracted from 
+        the decoded token with the user's stored `user_id` attribute.
+
+        Returns:
+            bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
+                  False otherwise.
+        """
         try:
             # The decoded token will return a dictionary with key-value pairs for the user
             decoded_token = auth.verify_id_token(self._access_token)
@@ -411,7 +442,26 @@ class User(UserProtocol):
             print(f"Token verification error: {str(e)}")
             return False
 
-    def serialize(self, getting_user: bool) -> dict:
+
+    def serialize(self, getting_user: bool = False) -> dict:
+        """Serializes a User object into a dictionary for JSON representation.
+
+        This method converts a User object's attributes into a dictionary format,
+        making it suitable for serialization into JSON. The serialization behavior
+        can be customized based on the `getting_user` flag:
+
+        - If `getting_user` is True, the serialized dictionary will include all user attributes,
+          including subcollections (e.g., 'categories' and 'transactions').
+        - If `getting_user` is False (default), the subcollections will be excluded from the serialization.
+
+        Args:
+            getting_user (bool, optional): Determines whether to include subcollections in the output.
+                                          Defaults to False.
+
+        Returns:
+            dict: A dictionary representation of the User object, with keys corresponding to attributes
+                  and values representing their serialized values.
+        """
         if getting_user:
             return {
                 'user_id': self._user_id,
@@ -426,7 +476,7 @@ class User(UserProtocol):
                 'transactions': self._transactions
             }
         else:
-                        return {
+            return {
                 'user_id': self._user_id,
                 'access_token': self._access_token,
                 'email': self._email,
