@@ -34,22 +34,22 @@ jobs:
     - name: Install Firebase CLI
       run: curl -sL https://firebase.tools | bash
 
-    - name: Authenticate with Firebase
+    - name: Decode and Authenticate with Firebase
       env:
-        FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_ACCOUNT_KEY }}
+        FIREBASE_SERVICE_ACCOUNT_KEY_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 }}
       run: |
-        echo "${{ secrets.FIREBASE_ACCOUNT_KEY }}" > ${HOME}/firebase-key.json
+        echo $FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 | base64 --decode > ${HOME}/firebase-key.json
         gcloud auth activate-service-account --key-file=${HOME}/firebase-key.json
         gcloud --quiet config set project <your-firebase-project-id>
         gcloud auth application-default login
 
     - name: Configure Firebase
       run: |
-        echo "SECRET_KEY_FOR_FIREBASE=${{ secrets.FIREBASE_ACCOUNT_KEY }}" > .env
+        echo "SECRET_KEY_FOR_FIREBASE=${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY_BASE64 }}" | base64 --decode > .env
 
     - name: Start Firebase emulators
       run: |
-        firebase emulators:start
+        firebase emulators:start 
         sleep 10  # Give the emulator time to start
 
     - name: Check one endpoint
