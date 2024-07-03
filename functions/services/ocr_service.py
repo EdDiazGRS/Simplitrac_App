@@ -1,3 +1,4 @@
+import io
 import os
 import re
 from typing import Optional, Dict
@@ -10,12 +11,51 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 
 # Set the path to your service account key file
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/eddiaz/Desktop/simplitracapp-1846334f37cc.json"
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/eddiaz/Desktop/simplitracapp-428d927d2e98.json"
 
 # Download NLTK data
 nltk.download('punkt')
 nltk.download('stopwords')
 
+
+
+# # Initialize Vision client
+# client = vision.ImageAnnotatorClient()
+
+# def extract_text(image_path):
+#     """Extracts text from the image using Google Cloud Vision API."""
+#     with io.open(image_path, 'rb') as image_file:
+#         content = image_file.read()
+
+#     image = vision.Image(content=content)
+#     response = client.text_detection(image=image)
+#     texts = response.text_annotations
+
+#     if texts:
+#         return texts[0].description
+#     return None
+
+# def extract_receipt_data(text):
+#     """Parses the extracted text to find key receipt data."""
+#     # Implement your parsing logic here
+#     # This is a placeholder implementation
+#     lines = text.split('\n')
+#     data = {
+#         'store_name': lines[0] if lines else '',
+#         'date': '',
+#         'total': '',
+#         'items': []
+#     }
+
+#     for line in lines[1:]:
+#         if 'date' in line.lower():
+#             data['date'] = line
+#         elif 'total' in line.lower():
+#             data['total'] = line
+#         else:
+#             data['items'].append(line)
+
+#     return data
 # Initialize Vision and Firestore clients
 vision_client = vision.ImageAnnotatorClient()
 storage_client = storage.Client()
@@ -31,24 +71,24 @@ def extract_text(image_path):
         return None
     return texts[0].description
 
-def parse_receipt_text(text):
-    """Parse the extracted text to find key data using regex and NLP."""
-    subtotal, tax, total = extract_total(text)
-    date = extract_date(text)
+# def parse_receipt_text(text):
+#     """Parse the extracted text to find key data using regex and NLP."""
+#     subtotal, tax, total = extract_total(text)
+#     date = extract_date(text)
     
-    print("Extracted Date:", date)
-    print("Extracted Subtotal:", subtotal)
-    print("Extracted Tax:", tax)
-    print("Extracted Total:", total)
+#     print("Extracted Date:", date)
+#     print("Extracted Subtotal:", subtotal)
+#     print("Extracted Tax:", tax)
+#     print("Extracted Total:", total)
     
-    data = {
-        "date": date,
-        "subtotal": subtotal,
-        "tax": tax,
-        "total": total,
+#     data = {
+#         "date": date,
+#         "subtotal": subtotal,
+#         "tax": tax,
+#         "total": total,
     
-    }
-    return data
+#     }
+#     return data
 
 def extract_date(text):
     """Extract date using regex."""
@@ -77,7 +117,7 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
         'store_name': None,
     }
 
-    # Extract store name (usually in the first few lines)
+   #Extract store name (usually in the first few lines)
     for i, line in enumerate(lines[:5]):
         if len(line.strip()) > 0 and not re.search(r'\d', line):  # Look for non-empty lines without numbers
             data['store_name'] = line.strip()
@@ -145,19 +185,19 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
    
 
 
-def store_receipt_data(collection_name, document_data):
-    """Stores the parsed receipt data into Firestore."""
-    doc_ref = firestore_client.collection(collection_name).add(document_data)
-    return doc_ref
+# def store_receipt_data(collection_name, document_data):
+#     """Stores the parsed receipt data into Firestore."""
+#     doc_ref = firestore_client.collection(collection_name).add(document_data)
+#     return doc_ref
 
 # Test the updated code with the provided images
-if __name__ == "__main__":
-    image_paths = ["/Users/eddiaz/Desktop/SimpliTrac/functions/services/R3.jpg"]
-    for image_path in image_paths:
-        text = extract_text(image_path)
-        print("Extracted text:")
-        print(text)
-        print("\nParsing receipt data...")
-        parsed_data = extract_receipt_data(text)
-        print("\nParsed Receipt Data:", parsed_data)
+# if __name__ == "__main__":
+#     image_paths = ["/Users/eddiaz/Desktop/SimpliTrac/functions/services/R3.jpg"]
+#     for image_path in image_paths:
+#         text = extract_text(image_path)
+#         print("Extracted text:")
+#         print(text)
+#         print("\nParsing receipt data...")
+#         parsed_data = extract_receipt_data(text)
+#         print("\nParsed Receipt Data:", parsed_data)
 
