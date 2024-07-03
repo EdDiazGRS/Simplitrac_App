@@ -23,7 +23,7 @@ cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
+ 
 
 class User(UserProtocol):
     """
