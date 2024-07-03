@@ -55,3 +55,6 @@ uritemplate==4.1.1
 urllib3==2.2.1
 watchdog==4.0.1
 Werkzeug==3.0.3
+nltk==3.8.1
+google-cloud-vision==3.7.2
+pillow==10.3.0

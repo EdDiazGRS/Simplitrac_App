@@ -1,9 +1,12 @@
 import os
-from dotenv import load_dotenv
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 import sys
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
-emulators_running = os.getenv('FIRESTORE_EMULATOR_HOST')
+
+emulators_running = os.getenv('FIRESTORE_EMULATOR_HOST') 
 
 if emulators_running:
     #Local environment settings

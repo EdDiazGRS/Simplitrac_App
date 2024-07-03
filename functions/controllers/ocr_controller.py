@@ -1,54 +1,63 @@
-# ocr_controller.py
-
-from firebase_functions import https_fn
-from services.ocr_service import extract_text, parse_receipt_text
-from repository.ocr_repository import store_receipt_data
-from typing import Union
+import os
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
+import io
 import json
+import logging
+from PIL import Image
+from firebase_functions import https_fn
+from services.ocr_service import extract_receipt_data, extract_text
+import tempfile
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 @https_fn.on_request()
 def process_receipt(req: https_fn.Request) -> https_fn.Response:
-    """
-    Process a receipt image: extract text, parse the receipt, and store the data in Firestore.
-
-    :param req: The request must contain the image path or image data.
-    :return: https_fn.Response
-    """
     try:
-        data = req.get_json()
-        image_path = data.get("image_path")
-        if not image_path:
-            return generate_http_response("Image path is required", 400)
-
-        # Extract text from the image
-        extracted_text = extract_text(image_path)
-        if not extracted_text:
-            return generate_http_response("No text detected in the image", 400)
-
-        # Parse the extracted text
-        parsed_data = parse_receipt_text(extracted_text)
+        logging.info("Starting process_receipt function")
         
-        # Store the parsed data
-        doc_ref = store_receipt_data("receipts", parsed_data)
-        if not doc_ref:
-            return generate_http_response("Failed to store receipt data", 500)
+        if 'file' not in req.files:
+            logging.warning("No file found in request")
+            return https_fn.Response(json.dumps({"error": "Image file is required"}), status=400, content_type='application/json')
         
-        return https_fn.Response(f"Receipt processed and stored with ID: {doc_ref.id}", 200)
-    
+        file = req.files['file']
+        if file.filename == '':
+            logging.warning("Empty filename received")
+            return https_fn.Response(json.dumps({"error": "No selected file"}), status=400, content_type='application/json')
+        
+        logging.info(f"Received file: {file.filename}")
+        
+        # Read the file content
+        image_data = file.read()
+        logging.info(f"Read {len(image_data)} bytes from file")
+        
+        # Save the image data to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
+            temp_file.write(image_data)
+            temp_filename = temp_file.name
+        
+        try:
+            # Extract text using OCR service
+            logging.info("Extracting text from image...")
+            extracted_text = extract_text(temp_filename)
+            if not extracted_text:
+                return https_fn.Response(json.dumps({"error": "No text detected in the image"}), status=400, content_type='application/json')
+            
+            logging.info("Parsing extracted text...")
+            parsed_data = extract_receipt_data(extracted_text)
+            logging.info(f"Parsed data: {parsed_data}")
+            
+            # Prepare the response data
+            response_data = {
+                "message": "Receipt processed successfully",
+                "receipt_data": parsed_data
+            }
+            
+            return https_fn.Response(json.dumps(response_data), status=200, content_type='application/json')
+        finally:
+            # Clean up the temporary file
+            os.unlink(temp_filename)
+            logging.info("Temporary file cleaned up")
     except Exception as e:
-        return generate_http_response(f"An error occurred: {str(e)}", 500)
-
-
-def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
-    if isinstance(message, list):
-        result_message: str = ""
-        result_message = result_message.join(", ")
-        return https_fn.Response(
-            response=json.dumps({'error': result_message}),
-            status=code
-        )
-    else:
-        return https_fn.Response(
-            response=json.dumps({'error':message}),
-            status=code
-        )
+        logging.error(f"Error in process_receipt: {str(e)}", exc_info=True)
+        return https_fn.Response(json.dumps({"error": str(e)}), status=500, content_type='application/json')

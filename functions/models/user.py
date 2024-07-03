@@ -23,7 +23,7 @@ cred = credentials.Certificate(firebase_config)
 firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
+ 
 
 class User(UserProtocol):
     """
@@ -486,3 +486,44 @@ class User(UserProtocol):
                 'last_login': self._last_login,
                 'admin': self._admin
             }
+
+
+#     def extract_subcollections(collection_ref) -> dict:
+#         """Extracts a Firestore document and its subcollections into a JSON-serializable dictionary.
+
+#         This function retrieves a Firestore document's data, then fetches data from
+#         its 'Category' and 'Transaction' subcollections. It combines all this data
+#         into a single dictionary, making it suitable for conversion to JSON.
+
+#         Args:
+#             collection_ref (google.cloud.firestore.DocumentSnapshot): 
+#                 A reference to a Firestore document snapshot.
+
+#         Returns:
+#             dict: A dictionary containing:
+#                 - The data from the original document.
+#                 - A 'categories' key with a list of dictionaries representing the documents in the 'Category' subcollection.
+#                 - A 'transaction' key with a list of dictionaries representing the documents in the 'Transaction' subcollection.
+
+#         Raises:
+#             google.cloud.exceptions.NotFound: If the document or subcollections do not exist.
+
+#         Example:
+#             doc_ref = db.collection('users').document('user_id_123')
+#             result = extract_subcollections(doc_ref)
+#             print(json.dumps(result, indent=2))  
+#         """
+
+#         doc_data = collection_ref.to_dict()
+
+#         # Retrieve data from 'Category' subcollection
+#         category_ref = collection_ref.reference.collection('Category')
+#         category_docs = [subdoc.to_dict() for subdoc in category_ref.stream()]  # Use stream() for efficiency
+#         doc_data['categories'] = category_docs  
+
+#         # Retrieve data from 'Transaction' subcollection
+#         transaction_ref = collection_ref.reference.collection('Transaction')
+#         transaction_docs = [subdoc.to_dict() for subdoc in transaction_ref.stream()]
+#         doc_data['transactions'] = transaction_docs  # Pluralized to match data structure
+
+#         return doc_data
