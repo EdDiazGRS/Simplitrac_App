@@ -5,11 +5,6 @@ import firebase_admin
 from firebase_admin import firestore, credentials, auth
 from dotenv import load_dotenv
 import os
-<<<<<<< HEAD
-import http.client as http
-
-=======
->>>>>>> 65c946a6a96e0ce46ff790c4a8561387a3e6819d
 from models.category import Category
 from models.transaction import Transaction
 from protocols.user_protocol import UserProtocol
@@ -23,16 +18,12 @@ load_dotenv(env_path)
 # Initialize Firebase using the service account
 from flask_cors import CORS
 firebase_service_account = os.getenv('SECRET_KEY_FOR_FIREBASE')
-if firebase_service_account:
-    firebase_config = json.loads(firebase_service_account)
-    if not firebase_admin._apps:
-        cred = credentials.Certificate(firebase_config)
-        firebase_admin.initialize_app(cred)
-else:
-    print("Warning: SECRET_KEY_FOR_FIREBASE not set")
+firebase_config = json.loads(firebase_service_account)
+cred = credentials.Certificate(firebase_config)
+firebase_admin.initialize_app(cred)
 
 db = firestore.client()
-
+ 
 
 class User(UserProtocol):
     """
@@ -81,19 +72,8 @@ class User(UserProtocol):
         Args:
             data (Dict[str, str]): The data to initialize the user.
         """
-<<<<<<< HEAD
-        self._user_id = data.get('user_id') if data.get('user_id') else ""
-        self._access_token = data.get('access_token')
-        self._email = data.get('email')
-        self._first_name = data.get('first_name')
-        self._last_name = data.get('last_name')
-        self._created_at = data.get('created_at')
-        self._last_login = data.get('last_login')
-        self._admin = data.get('admin')
-=======
         for k, v in data.items():
             setattr(self, k, v)
->>>>>>> 65c946a6a96e0ce46ff790c4a8561387a3e6819d
 
         if 'transactions' in data:
             self._transactions = [Transaction(tx) for tx in data['transactions']]
@@ -307,22 +287,9 @@ class User(UserProtocol):
     def find(user_id: str) -> Response:
         """Finds a single user in the Firestore database by their user_id.
 
-<<<<<<< HEAD
-        documents: [any] = db.collection(User.class_name).where('user_id', "==", user_id).get()
-        if len(documents) == 0:
-            result.add_error(f"A user with this id (${user_id} doesn't exist.")
-            return result
-        else:
-            # print(f"Here is the document: {documents[0]}")
-            user: Dict[str, str] = documents[0].to_dict()
-            # print(f"Here is the user: {user}")
-            result.set_payload(User(user))
-            return result
-=======
         This function queries the Firestore collection specified by the `User` class
         to locate a user with the given `user_id`. It returns a `Response` object 
         containing either the serialized user data or an error message.
->>>>>>> 65c946a6a96e0ce46ff790c4a8561387a3e6819d
 
         Args:
             user_id: A string representing the unique identifier (UUID) of the user to find.
@@ -365,51 +332,7 @@ class User(UserProtocol):
                 result.add_error(f"More than one user with id {user_id} exists.")
 
         return result
-    
-    def remove(self) -> Response:
-        result = Response()
 
-        documents: [any] = db.collection(User.class_name).where('user_id', "==", self.user_id).get()
-        if len(documents) == 0:
-            result.add_error(f"A user with this id (${self.user_id} doesn't exist.")
-            return result
-        else:
-            for doc in documents:
-                doc.reference.delete()
-            result.set_payload(f"This user was deleted: {self.user_id}")
-            return result
-
-    def is_authenticated(self) -> bool:
-        return True
-        # UNCOMMENT AND DELETE LINE ABOVE BEFORE PUSH
-        # try:
-        #     # The decoded token will return a dictionary with key-value pairs for the user
-        #     decoded_token = auth.verify_id_token(self._access_token)
-        #     return True if decoded_token.get("uid") == self._user_id else False
-        # except Exception as e:
-        #     print(f"Token verification error: {str(e)}")
-        #     return False
-
-<<<<<<< HEAD
-    def serialize(self) -> dict:
-        return {
-            'user_id': self._user_id,
-            'access_token': self._access_token,
-            'email': self._email,
-            'first_name': self._first_name,
-            'last_name': self._last_name,
-            'created_at': self._created_at,
-            'last_login': self._last_login,
-            'admin': self._admin
-        }
-
-class UserEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, User):
-            return obj.__dict__
-        return super().default(obj)
-
-=======
 
     def update_user_in_firestore(self) -> Response:
         """Updates the user data in the Firestore database.
@@ -604,4 +527,3 @@ class UserEncoder(json.JSONEncoder):
         doc_data['transactions'] = transaction_docs  # Pluralized to match data structure
 
         return doc_data
->>>>>>> 65c946a6a96e0ce46ff790c4a8561387a3e6819d
