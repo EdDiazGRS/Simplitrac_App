@@ -86,8 +86,9 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
+    
     if response.is_successful():
-        return https_fn.Response(response.get_payload())
+        return https_fn.Response(f"{response.get_payload()}")
     else:
         return https_fn.Response(f'There was an error: {response.get_errors()}')
 
@@ -110,13 +111,18 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     if not user_id:
         return generate_http_response('user_id parameter is required', 400)
     
-    user_instance = user.User(user_id)
+    try:
+        user_instance = user.User(user_id)
 
-    if not user_instance.user_id:
+    except Exception as e:  # Catch general exceptions for get_existing_user and User creation
+        return generate_http_response(str(e), 500)  # 500 Internal Server Error if unexpected
+
+    if user_instance.user_id != user_id:
         return generate_http_response(f"User {user_id} not found", 400)
 
     response.set_payload(user_instance.serialize(True))
-    return https_fn.Response(f"User {(response.get_payload())} found.", 200)
+
+    return https_fn.Response(f"{(response.get_payload())}", 200)
         
 
 
@@ -157,7 +163,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(f'Invalid user_id: {e}', 400)
 
     try:
-        user_dict = users_service.get_existing_user(user_id).get_payload().to_dict()
+        user_dict = user.User(user_id).serialize(True)
         user_dict.update(data)  # Update the dictionary
         user_instance = user.User(user_dict)
 
@@ -170,10 +176,12 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     if user_instance:
         access_token = user_instance.access_token
 
-    update_result = users_service.update_user(user_id, user_instance)
+    update_result = users_service.update_user(user_instance)
+
+    print(update_result.get_payload())
 
     if update_result.is_successful():
-        return https_fn.Response(f"User {user_id} updated.", 200)
+        return https_fn.Response(update_result.get_payload(), 200)
     else:
         return generate_http_response(update_result.get_errors(), 400)
 
@@ -200,7 +208,7 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
     get_result = users_service.delete_user(user_id)
     
     if get_result.is_successful():
-        return https_fn.Response(f"User {user_id} deleted.")
+        return https_fn.Response(f"User with ID {user_id} deleted.")
     else:
         return generate_http_response(get_result.get_errors(), 400)
         
@@ -217,7 +225,8 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
     """
     if isinstance(message, list):
         result_message: str = ""
-        result_message = result_message.join(", ")
+        separator = ", "
+        result_message = separator.join(message)
         return https_fn.Response(
             response=json.dumps({'error': result_message}),
             status=code
