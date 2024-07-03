@@ -68,3 +68,5 @@ venv
 #python env controller
 .python-version
 
+*.pyc
+__pycache__/

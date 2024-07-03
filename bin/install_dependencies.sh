@@ -65,7 +65,8 @@ pwd
 
 # Navigate to the backend directory and install dependencies
 echo "Creating python3 virtual environment for server..."
-cd ./backend/functions || exit
+cd ./functions || exit
+
 echo "Current working directory"
 pwd
 
@@ -83,7 +84,7 @@ if [ ! "$REQ_FILE" ]; then
   echo "Requirements file not found"
   echo "$REQ_FILE"
 else
-  pip install -r requirements.txt
+  python3.12 -m pip install -r requirements.txt
 fi
 cd ../..
 

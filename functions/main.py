@@ -19,3 +19,6 @@ else:
     from controllers.users_controller import update_user, create_new_user, get_existing_user, delete_user
     from controllers.ocr_controller import process_receipt
 
+
+
+__all__ = ['create_new_user', 'update_user', 'get_existing_user', 'delete_user']
