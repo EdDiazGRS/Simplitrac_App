@@ -3,7 +3,6 @@ os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 import io
 import json
 import logging
-from PIL import Image
 from firebase_functions import https_fn
 from services.ocr_service import extract_receipt_data, extract_text
 import tempfile

@@ -3,15 +3,14 @@ from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 import firebase_admin
 from firebase_admin import firestore, credentials, auth
-from dotenv import load_dotenv
 import os
 from models.category import Category
 from models.transaction import Transaction
 from protocols.user_protocol import UserProtocol
 from models.response import Response
 
-
 # Load environment variables
+from dotenv import load_dotenv
 env_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(env_path)
 
