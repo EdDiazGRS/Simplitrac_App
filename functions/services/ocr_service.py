@@ -1,22 +1,65 @@
-import io
+import json
 import os
 import re
 from typing import Optional, Dict
 from datetime import datetime
 from google.cloud import vision
-from google.cloud import storage
+# from google.cloud import storage
 from firebase_admin import firestore, credentials, initialize_app
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 
-# Set the path to your service account key file
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "/Users/eddiaz/Desktop/simplitracapp-428d927d2e98.json"
+# Load environment variables
+from dotenv import load_dotenv
 
-# Download NLTK data
-nltk.download('punkt')
-nltk.download('stopwords')
+# Load environment variables from .env file
+env_path = os.path.join(os.path.dirname(__file__), '../.env')
+load_dotenv(env_path)
 
+
+curr_path = os.path.dirname(__file__)
+root_path = f'{curr_path}/../'
+
+# Get the service account credentials from the environment variable
+env_string = os.getenv("SECRET_KEY_FOR_FIREBASE")
+
+# Append to NLTK paths
+nltk.data.path.append(f'{root_path}nltk_data')
+
+@lambda _:_()
+def find_files():
+    if env_string:
+        try:
+            env_json = json.loads(env_string)
+
+            json_file_path = f'{root_path}temp_google_credentials.json'
+
+            with open(json_file_path, 'w') as temp_file:
+                if not json_file_path:
+                    json.dump(env_json, temp_file)
+
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.abspath(json_file_path)
+        except json.JSONDecodeError:
+            print("Invalid JSON in SECRET_KEY_FOR_FIREBASE environment variable")
+    else:
+        print("SECRET_KEY_FOR_FIREBASE not found in environment variables")
+
+    # Function to check if NLTK data packages are downloaded
+
+def check_nltk_data(package):
+    try:
+        nltk.data.find(f'{package}')
+        return True
+    except LookupError:
+        return False
+
+
+# Download NLTK data if not already present
+if not check_nltk_data('tokenizers/punkt'):
+    nltk.download('punkt')
+if not check_nltk_data('corpora/stopwords'):
+    nltk.download('stopwords')
 
 
 # # Initialize Vision client
@@ -58,7 +101,7 @@ nltk.download('stopwords')
 #     return data
 # Initialize Vision and Firestore clients
 vision_client = vision.ImageAnnotatorClient()
-storage_client = storage.Client()
+# storage_client = storage.Client()
 
 def extract_text(image_path):
     """Detects text in the file."""
