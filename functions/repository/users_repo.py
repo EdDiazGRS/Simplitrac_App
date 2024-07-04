@@ -31,24 +31,24 @@ def create_user(user: User) -> Response:
     return result
 
 
-def find_user(user_id: str) -> Response:
-    """Finds an existing user in the Firestore database.
+# def find_user(user_id: str) -> Response:
+#     """Finds an existing user in the Firestore database.
 
-    Args:
-        user_id (str): The unique identifier (e.g., UUID) of the user to find.
+#     Args:
+#         user_id (str): The unique identifier (e.g., UUID) of the user to find.
 
-    Returns:
-        Response: A `Response` object:
-            - If successful, `result.is_successful()` is True and `result.get_payload()` contains the serialized User object.
-            - If unsuccessful (user not found), `result.is_successful()` is False and `result.get_errors()` contains a 'user not found' message.
-    """
-    find_result: Response = User.find(user_id)  
-    if not find_result.is_successful():
-        find_result.set_errors(f"[User Service] User with this id: {user_id} not found") 
-    return find_result
+#     Returns:
+#         Response: A `Response` object:
+#             - If successful, `result.is_successful()` is True and `result.get_payload()` contains the serialized User object.
+#             - If unsuccessful (user not found), `result.is_successful()` is False and `result.get_errors()` contains a 'user not found' message.
+#     """
+#     find_result: Response = User.find(user_id)  
+#     if not find_result.is_successful():
+#         find_result.set_errors(f"[User Service] User with this id: {user_id} not found") 
+#     return find_result
 
 
-def update_user(user_id: str, user: User) -> Response:
+def update_user(user: User) -> Response:
     """Updates an existing user in the Firestore database.
 
     Args:
@@ -63,7 +63,7 @@ def update_user(user_id: str, user: User) -> Response:
     Note:
         This function assumes that the User object (`user`) already has the updated data.
     """
-    result = user.update_user_in_firestore()  
+    result = user.update_user_in_firestore()
     return result
 
 
