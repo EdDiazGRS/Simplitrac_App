@@ -27,6 +27,7 @@ def process_receipt(req: https_fn.Request) -> https_fn.Response:
         
         # Read the file content
         image_data = file.read()
+        logging.info("TYPE: ", type(image_data))
         logging.info(f"Read {len(image_data)} bytes from file")
 
         # # Save the image data to a temporary file
