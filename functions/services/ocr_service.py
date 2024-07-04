@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 import os
@@ -101,16 +102,20 @@ if not check_nltk_data('corpora/stopwords'):
 
 #     return data
 # Initialize Vision and Firestore clients
-vision_client = vision.ImageAnnotatorClient()
 
 
 # storage_client = storage.Client()
 
-def extract_text(image_data):
+def extract_text(image_file):
+    vision_client = vision.ImageAnnotatorClient()
+
     """Detects text in the file."""
-    image = vision.Image(content=image_data)
+    image = vision.Image(content=image_file)
+
     logging.info("Detecting text in picture")
+
     response = vision_client.text_detection(image=image)
+    logging.info(response.text_annotations)
     texts = response.text_annotations
     if not texts:
         return None
@@ -229,6 +234,7 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
             pass
 
     return data
+
 
 # def store_receipt_data(collection_name, document_data):
 #     """Stores the parsed receipt data into Firestore."""
