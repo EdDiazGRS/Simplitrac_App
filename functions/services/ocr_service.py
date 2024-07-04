@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 from typing import Optional, Dict
@@ -105,11 +106,10 @@ vision_client = vision.ImageAnnotatorClient()
 
 # storage_client = storage.Client()
 
-def extract_text(image_path):
+def extract_text(image_data):
     """Detects text in the file."""
-    with open(image_path, 'rb') as image_file:
-        content = image_file.read()
-    image = vision.Image(content=content)
+    image = vision.Image(content=image_data)
+    logging.info("Detecting text in picture")
     response = vision_client.text_detection(image=image)
     texts = response.text_annotations
     if not texts:
