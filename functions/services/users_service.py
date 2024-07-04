@@ -1,5 +1,4 @@
 from models.user import User
-from repository.users_repo import create_user
 from models.response import Response
 from repository import users_repo
 
@@ -16,7 +15,7 @@ def add_new_user(user: User) -> Response:
                   - If unsuccessful, `result.is_successful()` is False and `result.get_errors()` provides an error message.
     """
 
-    return create_user(user)
+    return users_repo.create_user(user)
 
 
 def update_user(user: User) -> Response:

@@ -105,7 +105,6 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
         https_fn.Response: An HTTP response containing the serialized user data or an error message
                            if the user is not found.
     """
-    response = Response()
     user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
 
     if not user_id:
@@ -120,9 +119,7 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     if user_instance.user_id != user_id:
         return generate_http_response(f"User {user_id} not found", 400)
 
-    response.set_payload(user_instance.serialize(True))
-
-    return https_fn.Response(f"{(response.get_payload())}", 200)
+    return https_fn.Response(f"{user_instance.serialize(True)}", 200)
         
 
 
@@ -170,6 +167,9 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     except Exception as e:  # Catch general exceptions for get_existing_user and User creation
         return generate_http_response(str(e), 500)  # 500 Internal Server Error if unexpected
 
+    if not user_instance.user_id:  # Check if user found in database
+        return generate_http_response(f"User {user_id} not found.", 400)
+
     if user_id != user_instance.user_id:  # Ensure consistency between query and body
         return generate_http_response("user_id in query and body do not match", 400)
 
@@ -177,8 +177,6 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         access_token = user_instance.access_token
 
     update_result = users_service.update_user(user_instance)
-
-    print(update_result.get_payload())
 
     if update_result.is_successful():
         return https_fn.Response(update_result.get_payload(), 200)
@@ -225,8 +223,7 @@ def generate_http_response(message: Union[str, list], code: int) -> https_fn.Res
     """
     if isinstance(message, list):
         result_message: str = ""
-        separator = ", "
-        result_message = separator.join(message)
+        result_message = ", ".join(message)
         return https_fn.Response(
             response=json.dumps({'error': result_message}),
             status=code
