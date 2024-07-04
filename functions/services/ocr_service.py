@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 env_path = os.path.join(os.path.dirname(__file__), '../.env')
 load_dotenv(env_path)
 
-
 curr_path = os.path.dirname(__file__)
 root_path = f'{curr_path}/../'
 
@@ -27,7 +26,8 @@ env_string = os.getenv("SECRET_KEY_FOR_FIREBASE")
 # Append to NLTK paths
 nltk.data.path.append(f'{root_path}nltk_data')
 
-@lambda _:_()
+
+@lambda _: _()
 def find_files():
     if env_string:
         try:
@@ -35,8 +35,8 @@ def find_files():
 
             json_file_path = f'{root_path}temp_google_credentials.json'
 
-            with open(json_file_path, 'w') as temp_file:
-                if not json_file_path:
+            if not os.path.exists(json_file_path):
+                with open(json_file_path, 'w') as temp_file:
                     json.dump(env_json, temp_file)
 
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.abspath(json_file_path)
@@ -46,6 +46,7 @@ def find_files():
         print("SECRET_KEY_FOR_FIREBASE not found in environment variables")
 
     # Function to check if NLTK data packages are downloaded
+
 
 def check_nltk_data(package):
     try:
@@ -60,7 +61,6 @@ if not check_nltk_data('tokenizers/punkt'):
     nltk.download('punkt')
 if not check_nltk_data('corpora/stopwords'):
     nltk.download('stopwords')
-
 
 # # Initialize Vision client
 # client = vision.ImageAnnotatorClient()
@@ -101,6 +101,8 @@ if not check_nltk_data('corpora/stopwords'):
 #     return data
 # Initialize Vision and Firestore clients
 vision_client = vision.ImageAnnotatorClient()
+
+
 # storage_client = storage.Client()
 
 def extract_text(image_path):
@@ -114,22 +116,23 @@ def extract_text(image_path):
         return None
     return texts[0].description
 
+
 # def parse_receipt_text(text):
 #     """Parse the extracted text to find key data using regex and NLP."""
 #     subtotal, tax, total = extract_total(text)
 #     date = extract_date(text)
-    
+
 #     print("Extracted Date:", date)
 #     print("Extracted Subtotal:", subtotal)
 #     print("Extracted Tax:", tax)
 #     print("Extracted Total:", total)
-    
+
 #     data = {
 #         "date": date,
 #         "subtotal": subtotal,
 #         "tax": tax,
 #         "total": total,
-    
+
 #     }
 #     return data
 
@@ -150,6 +153,7 @@ def extract_date(text):
             return match.group()
     return None
 
+
 def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
     lines = text.split('\n')
     data = {
@@ -160,7 +164,7 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
         'store_name': None,
     }
 
-   #Extract store name (usually in the first few lines)
+    #Extract store name (usually in the first few lines)
     for i, line in enumerate(lines[:5]):
         if len(line.strip()) > 0 and not re.search(r'\d', line):  # Look for non-empty lines without numbers
             data['store_name'] = line.strip()
@@ -189,7 +193,7 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
                 data['subtotal'] = subtotal_match.group(1)
                 subtotal_found = True
             elif i + 1 < len(lines):
-                subtotal_match = re.search(r'\$?(\d+\.\d{2})', lines[i+1])
+                subtotal_match = re.search(r'\$?(\d+\.\d{2})', lines[i + 1])
                 if subtotal_match:
                     data['subtotal'] = subtotal_match.group(1)
                     subtotal_found = True
@@ -200,7 +204,7 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
             if tax_match:
                 data['tax'] = tax_match.group(1)
             elif i + 1 < len(lines):
-                tax_match = re.search(r'\$?(\d+\.\d{2})', lines[i+1])
+                tax_match = re.search(r'\$?(\d+\.\d{2})', lines[i + 1])
                 if tax_match:
                     data['tax'] = tax_match.group(1)
 
@@ -210,7 +214,7 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
             if total_matches:
                 data['total'] = total_matches[-1]  # Take the last match if multiple found
             elif i + 1 < len(lines):
-                total_matches = re.findall(r'\$?(\d+\.\d{2})', lines[i+1])
+                total_matches = re.findall(r'\$?(\d+\.\d{2})', lines[i + 1])
                 if total_matches:
                     data['total'] = total_matches[-1]  # Take the last match if multiple found
 
@@ -225,8 +229,6 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
             pass
 
     return data
-   
-
 
 # def store_receipt_data(collection_name, document_data):
 #     """Stores the parsed receipt data into Firestore."""
@@ -243,4 +245,3 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
 #         print("\nParsing receipt data...")
 #         parsed_data = extract_receipt_data(text)
 #         print("\nParsed Receipt Data:", parsed_data)
-
