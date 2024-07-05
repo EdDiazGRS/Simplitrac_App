@@ -167,6 +167,9 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
         'tax': None,
         'total': None,
         'store_name': None,
+        'created_at': None,
+        'vendor': None,
+        'amount': None
     }
 
     #Extract store name (usually in the first few lines)
@@ -232,6 +235,10 @@ def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
             data['tax'] = f"{calculated_tax:.2f}"
         except ValueError:
             pass
+
+    data['created_at'] = data.get("date")
+    data['vendor'] = data.get("store_name")
+    data['amount'] = data.get("total")
 
     return data
 
