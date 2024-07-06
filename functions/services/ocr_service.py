@@ -119,7 +119,10 @@ def extract_text(image_file):
     texts = response.text_annotations
     if not texts:
         return None
-    return texts[0].description
+    else:
+        #call the open ai service with text and respond with json
+        #store json
+        return texts[0].description # return whatever the frontend needs(json)
 
 
 # def parse_receipt_text(text):
