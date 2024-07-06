@@ -92,6 +92,7 @@ def process_receipt(req: https_fn.Request) -> https_fn.Response:
             logging.info("Extracting text from image...")
             extracted_text = extract_text(image_data)
             if not extracted_text:
+                logging.warning("No text detected in the image")
                 return https_fn.Response(json.dumps({"error": "No text detected in the image"}), status=400, content_type='application/json')
             
             logging.info("Parsing extracted text...")
@@ -102,9 +103,10 @@ def process_receipt(req: https_fn.Request) -> https_fn.Response:
             transaction = Transaction(parsed_data)
             
             return https_fn.Response(json.dumps(transaction.serialize()), status=200, content_type='application/json')
-        finally:
-            # Clean up the temporary file
-            logging.info("Processing image complete")
+        except Exception as processing_error:
+            logging.error(f"Error processing image: {str(processing_error)}", exc_info=True)
+            return https_fn.Response(json.dumps({"error": "Error processing image"}), status=400, content_type='application/json')
+
     except Exception as e:
         logging.error(f"Error in process_receipt: {str(e)}", exc_info=True)
         return https_fn.Response(json.dumps({"error": str(e)}), status=500, content_type='application/json')
