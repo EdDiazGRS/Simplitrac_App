@@ -10,7 +10,7 @@ class Transaction(TransactionProtocol):
     Attributes are initialized during the instantiation of the class.
     """
 
-    class_name = 'Transaction'
+    class_name = 'transactions'
 
     def __init__(self, data: Optional[Dict[str, Any]] = None):
         """

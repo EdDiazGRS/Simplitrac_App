@@ -11,6 +11,9 @@ class Category(CategoryProtocol):
         _category_id (Optional[uuid.UUID]): The unique identifier for the category.
         _category_name (Optional[str]): The name of the category.
     """
+
+    class_name = "categories"
+
     _category_id: Optional[uuid.UUID] = None
     _category_name: Optional[str] = None
 

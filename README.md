@@ -32,32 +32,34 @@
 
     - Go to the Firebase console.
     - Click the gear near the top left of the screen and select "Project Settings".
-    - 
+    - Copy the "Web API Key"
 
 6. Make sure that you put all secrets in your .env file. This file should be in the root of the server folder. The .env file should look like this:
 
 ```
-SUPER_SECRET_KEY=your_secret_key_here
+SUPER_SECRET_KEY={your_secret_key_here}
 ```
 
 ## Running the Server for local testing 
-1. Run the server for local testing:
-`firebase emulators:start`
+Run the server for local testing:
+
+    `firebase emulators:start`
 
 ## Deploying Code
-1. To deploy the code, run the following command:
+To deploy the code, run the following command:
 
-`firebase deploy`
+    `firebase deploy`
 
 This will deploy everything at once. In my experience, you could really run into some problems by doing this, so its best to deploy each function individually by running this:
 
-`firebase deploy --only functions:<function_name>`
+    `firebase deploy --only functions:<function_name>`
 
 This will deploy the function with the name <function_name> to the cloud.
 
 This avoids the issue where deploying everything my cause everything to break at once instead of just one function.
 
 ## Backend
+
 ## Introduction
 
 Using Firebase Emulators allows you to simulate Firebase services locally, making it easier to develop and debug your application without affecting the live environment. This guide will walk you through setting up and using the Firebase Emulators to test and debug your endpoints effectively.
