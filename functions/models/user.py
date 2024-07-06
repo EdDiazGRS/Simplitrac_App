@@ -32,7 +32,7 @@ class User(UserProtocol):
         class_name (str): The name of the class.
     """
 
-    class_name = "User"
+    class_name = "Users"
 
     def __init__(self, data: Optional[Union[dict, str]] = None):
         """
@@ -99,12 +99,12 @@ class User(UserProtocol):
         adding them to the `user_data` dictionary.
         """
         if self._user_id:
-            transactions_ref = db.collection(self.class_name).document(str(self._user_id)).collection('Transaction')
+            transactions_ref = db.collection(self.class_name).document(str(self._user_id)).collection(Transaction.class_name)
             transaction_docs = transactions_ref.stream()
             # user_data['transactions'] = [doc.to_dict() for doc in transaction_docs]
             self._transactions.extend(doc.to_dict() for doc in transaction_docs)
 
-            categories_ref = db.collection(self.class_name).document(str(self._user_id)).collection('Category')
+            categories_ref = db.collection(self.class_name).document(str(self._user_id)).collection(Category.class_name)
             category_docs = categories_ref.stream()
             # user_data['categories'] = [doc.to_dict() for doc in category_docs]
             self._categories.extend(doc.to_dict() for doc in category_docs)
