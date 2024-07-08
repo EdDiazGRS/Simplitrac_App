@@ -128,6 +128,26 @@ class Transaction(TransactionProtocol):
         """
         return self._category_id
 
+    @property
+    def category_name(self) -> Optional[str]:  # Added property
+        """
+        Gets the category name of the transaction.
+
+        Returns:
+            Optional[str]: The category name of the transaction.
+        """
+        return self._category_name
+
+    @category_name.setter
+    def category_name(self, value: str) -> None:  # Added setter
+        """
+        Sets the category name of the transaction.
+
+        Args:
+            value (str): The category name of the transaction.
+        """
+        self._category_name = value
+
     @category_id.setter
     def category_id(self, value: uuid.UUID) -> None:
         """
@@ -184,6 +204,7 @@ class Transaction(TransactionProtocol):
             'created_at': self.created_at,
             'amount': self.amount,
             'vendor': self.vendor,
+            'category_name': self.category_name,  
             'category_id': str(self.category_id) if self.category_id else None,
             'picture_id': str(self.picture_id) if self.picture_id else None,
             'is_successful': self.is_successful,
