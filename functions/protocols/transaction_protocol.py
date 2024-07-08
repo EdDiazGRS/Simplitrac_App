@@ -8,6 +8,7 @@ class TransactionProtocol(Protocol):
     _created_at: Optional[datetime]
     _amount: Optional[float]
     _vendor: Optional[str]
+    _category_name: Optional[str] 
     _category_id: Optional[uuid.UUID]
     _picture_id: Optional[uuid.UUID]
     _is_successful: Optional[bool]
@@ -36,6 +37,12 @@ class TransactionProtocol(Protocol):
 
     @vendor.setter
     def vendor(self, value: str) -> None: ...
+
+    @property
+    def category_name(self) -> Optional[str]: ...  
+
+    @category_name.setter
+    def category_name(self, value: str) -> None: ...  
 
     @property
     def category_id(self) -> Optional[uuid.UUID]: ...
