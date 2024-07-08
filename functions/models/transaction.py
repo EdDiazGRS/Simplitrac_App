@@ -23,6 +23,7 @@ class Transaction(TransactionProtocol):
         self._created_at: Optional[datetime] = None
         self._amount: Optional[float] = None
         self._vendor: Optional[str] = None
+        self._catgory_name: Optional[str] = None
         self._category_id: Optional[uuid.UUID] = None
         self._picture_id: Optional[uuid.UUID] = None
         self._is_successful: Optional[bool] = None
@@ -32,6 +33,7 @@ class Transaction(TransactionProtocol):
             self._created_at = data.get('created_at')
             self._amount = data.get('amount')
             self._vendor = data.get('vendor')
+            self._category_name = data.get('category_name')
             self._category_id = data.get('category_id')
             self._picture_id = data.get('picture_id')
             self._is_successful = data.get('is_successful')
