@@ -47,6 +47,7 @@ def cors_enabled_function(func):
 @cors_enabled_function
 @https_fn.on_request()
 def create_new_user(req: https_fn.Request) -> https_fn.Response:
+    print("Inside create user fiunction")
     """Creates a new user in the Firestore database.
 
     Args:
@@ -88,7 +89,7 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     response: Response = users_service.add_new_user(user_instance)
     
     if response.is_successful():
-        return https_fn.Response(f"{response.get_payload()}")
+        return https_fn.Response(f"{response.get_payload()}", 200)
     else:
         return https_fn.Response(f'There was an error: {response.get_errors()}')
 
@@ -119,7 +120,7 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     if user_instance.user_id != user_id:
         return generate_http_response(f"User {user_id} not found", 400)
 
-    return https_fn.Response(f"{user_instance.serialize(True)}", 200)
+    return https_fn.Response(f"{user_instance.create_json_string(True)}", 200)
         
 
 
@@ -179,7 +180,7 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     update_result = users_service.update_user(user_instance)
 
     if update_result.is_successful():
-        return https_fn.Response(update_result.get_payload(), 200)
+        return https_fn.Response(json.dumps(update_result.get_payload()), 200)
     else:
         return generate_http_response(update_result.get_errors(), 400)
 

@@ -256,7 +256,7 @@ class User(UserProtocol):
                 transactions_ref.document(transaction_data['transaction_id']).set(transaction_data)
 
             # Save categories to Category subcollection
-            categories_ref = user_ref.collection('Category')
+            categories_ref = user_ref.collection(Category.class_name)
             for category in self._categories:
                 category_data = category.serialize()
                 categories_ref.document(category_data['category_id']).set(category_data)
@@ -370,7 +370,7 @@ class User(UserProtocol):
         return result
 
 
-
+    # TODO TURN OFF WHEN DEBUGGING
     def is_authenticated(self) -> bool:
         """Verifies if the user is authenticated using a Firebase ID token.
 
@@ -382,6 +382,7 @@ class User(UserProtocol):
             bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
                   False otherwise.
         """
+        print('inside auth')
         try:
             # The decoded token will return a dictionary with key-value pairs for the user
             decoded_token = auth.verify_id_token(self._access_token)
@@ -389,6 +390,8 @@ class User(UserProtocol):
         except Exception as e:
             print(f"Token verification error: {str(e)}")
             return False
+
+        # return True
 
 
     def serialize(self, getting_user: bool = False) -> dict:
@@ -434,3 +437,47 @@ class User(UserProtocol):
                 'last_login': self._last_login,
                 'admin': self._admin
             }
+
+    def create_json_string(self, getting_user: bool = False) -> str:
+        """Serializes a User object into a dictionary for JSON representation.
+
+        This method converts a User object's attributes into a dictionary format,
+        making it suitable for serialization into JSON. The serialization behavior
+        can be customized based on the `getting_user` flag:
+
+        - If `getting_user` is True, the serialized dictionary will include all user attributes,
+          including subcollections (e.g., 'categories' and 'transactions').
+        - If `getting_user` is False (default), the subcollections will be excluded from the serialization.
+
+        Args:
+            getting_user (bool, optional): Determines whether to include subcollections in the output.
+                                          Defaults to False.
+
+        Returns:
+            dict: A dictionary representation of the User object, with keys corresponding to attributes
+                  and values representing their serialized values.
+        """
+        if getting_user:
+            return json.dumps({
+                'user_id': self._user_id,
+                'access_token': self._access_token,
+                'email': self._email,
+                'first_name': self._first_name,
+                'last_name': self._last_name,
+                'created_at': self._created_at,
+                'last_login': self._last_login,
+                'admin': self._admin,
+                'categories': self._categories,
+                'transactions': self._transactions
+            })
+        else:
+            return json.dumps({
+                'user_id': self._user_id,
+                'access_token': self._access_token,
+                'email': self._email,
+                'first_name': self._first_name,
+                'last_name': self._last_name,
+                'created_at': self._created_at,
+                'last_login': self._last_login,
+                'admin': self._admin
+            })
