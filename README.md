@@ -28,7 +28,6 @@ Live - [https://dave-b-b.github.io/simplitrac_frontend](https://dave-b-b.github.
 - Firebase
 - Google OAuth
 - Google Cloud Vision
-- OpenAI
 - BigQuery
 - Looker Studio
 
