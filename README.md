@@ -12,7 +12,7 @@ Live - [https://dave-b-b.github.io/simplitrac_frontend](https://dave-b-b.github.
 **[Tech Stack](#tech-stack)**<br>
 **[Project Overview](#project-overview)**<br>
 **[Project Planning and Organization](#project-planning-and-organization)**<br>
-**[Backend API Endpoints](#backend-api-endpoints)**<br>
+**[Backend API Endpoint](#backend-api-endpoint)**<br>
 **[Development Server Setup](#development-server-setup)**<br>
 
 ## Team:
