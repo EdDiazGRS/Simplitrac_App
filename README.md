@@ -1,8 +1,76 @@
 # SimpliTrac JTC Capstone
 
-## Setup
+<img src="frontend/dist/assets/simplitrac.webp" alt="drawing" width="500"/>
 
----
+Simplicity in finance Tracking
+
+Live - [https://dave-b-b.github.io/simplitrac_frontend](https://dave-b-b.github.io/simplitrac_frontend)
+
+## Table of Contents:
+
+**[Team](#team)**<br>
+**[Tech Stack](#tech-stack)**<br>
+**[Project Overview](#project-overview)**<br>
+**[Project Planning and Organization](#project-planning-and-organization)**<br>
+**[Development Server Setup](#development-server-setup)**<br>
+
+## Team:
+
+- Paul An - Product Owner / Scrum Leader
+- Dave Brown - Technical Lead
+- Patrick Snoop - UX, Testing, and QA Lead
+- Eddie Diaz - Flex Contributor
+- Kirn Kim - Documentation and Presentation Lead
+
+## Tech Stack:
+
+- React
+- Firebase
+- Google OAuth
+- Google Cloud Vision
+- OpenAI
+- BigQuery
+- Looker Studio
+
+## Project Overview:
+
+<ins>Problem</ins>: Finance tracking applications are often complicated, having an abundance of functionality which often goes unused. This leads to frustration for the end user, who may try the app, but soon stops using it after finding it difficult to use.
+
+<ins>Objective</ins>: SimpliTrac is a simple, no-frills application that utilizes artificial intelligence to make finance tracking simpler.
+
+## Project Planning and Organization:
+
+The Entity Relationship Diagram for the data collection is as follows:
+
+- User (collection)
+    - user_id: str
+    - google_id: str
+    - email: str
+    - first_name: str
+    - last_name: str
+    - created_at: datetime
+    - last_login: datetime
+    - admin: bool
+    - Category (sub-collection) 
+        - category_id: uuid
+        - category_name: str
+    - Transaction (sub-collection)
+        - transaction_id: uuid
+        - created_at: DateTime
+        - transaction_date: date
+        - amount: int
+        - vendor: str
+        - category_id: user.Category.category_id
+        - is_successful: bool
+        - recheck: bool
+
+Swimlane Diagrams:<br>
+<img src="frontend/dist/assets/signup_process.png" alt="drawing" width="500"/><br>
+<img src="frontend/dist/assets/input_track.png" alt="drawing" width="1000"/><br>
+
+
+
+## Development Server Setup:
 
 1. Navigate to the folder where you want to close the repository. Make sure you are standing in the root folder and run the following command:
 
@@ -58,7 +126,7 @@ This will deploy the function with the name <function_name> to the cloud.
 
 This avoids the issue where deploying everything my cause everything to break at once instead of just one function.
 
-## Backend
+# Backend
 
 ## Introduction
 
@@ -103,7 +171,7 @@ def test_controller(req: https_fn.Request) -> https_fn.Response:
     print("Connected to endpoint")
     print("Here's the info you sent:", data)
     return https_fn.Response(f"Here's the data {data}")
-`````
+```
 
 ### 4. Check the Logs
 
