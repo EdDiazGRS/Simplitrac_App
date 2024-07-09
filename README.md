@@ -12,6 +12,7 @@ Live - [https://dave-b-b.github.io/simplitrac_frontend](https://dave-b-b.github.
 **[Tech Stack](#tech-stack)**<br>
 **[Project Overview](#project-overview)**<br>
 **[Project Planning and Organization](#project-planning-and-organization)**<br>
+**[Backend API Endpoints](#backend-api-endpoints)**<br>
 **[Development Server Setup](#development-server-setup)**<br>
 
 ## Team:
@@ -67,7 +68,9 @@ Swimlane Diagrams:<br>
 <img src="frontend/dist/assets/signup_process.png" alt="drawing" width="500"/><br>
 <img src="frontend/dist/assets/input_track.png" alt="drawing" width="1000"/><br>
 
+## Backend API Endpoint
 
+[https://firestore.googleapis.com/v1/projects/simplitracapp/databases/(default)/documents/Users/{user_id}]
 
 ## Development Server Setup:
 
