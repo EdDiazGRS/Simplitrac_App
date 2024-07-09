@@ -91,9 +91,13 @@ def process_receipt(req: https_fn.Request) -> https_fn.Response:
             # Extract text using OCR service
             logging.info("Extracting text from image...")
             extracted_text = extract_text(image_data)
+
             if not extracted_text:
                 logging.warning("No text detected in the image")
-                return https_fn.Response(json.dumps({"error": "No text detected in the image"}), status=400, content_type='application/json')
+                return https_fn.Response(json.dumps({
+                    "error": "No text detected",
+                    "message": "No text detected in the image, please try again"
+                }), status=400, content_type='application/json')
             
             logging.info("Parsing extracted text...")
             parsed_data = extract_receipt_data(extracted_text)
