@@ -294,39 +294,10 @@ class User(UserProtocol):
             self: The User object whose data will be updated in Firestore.
     
         Returns:
-            A Response object:
-                - If the update is successful, the `payload` attribute will contain a message
-                  confirming the update.
-                - If there is an error during the update process, the `errors` attribute will 
-                  contain an error message.
-                - Use the `is_successful()` method to determine the success or failure of the update.
-    
-        Raises:
-            google.cloud.exceptions.FirebaseError: If there is an error communicating with Firestore.
-            Other exceptions may be raised depending on the implementation of `save_to_firestore()`.
-    
-        Example Usage:
-            user = User.get_by_id("123e4567-e89b-12d3-a456-426614174000")  # Assume you have a get_by_id method
-            user.name = "New Name"
-            result = user.update_user_in_firestore()
-    
-            if result.is_successful():
-                print(result.get_payload())  # Output: "User 123e4567-e89b-12d3-a456-426614174000 was updated"
-            else:
-                print(f"Error updating user: {result.get_errors()}")
+            A Response object from the save_to_firestore() method
         """
     
-        result = Response()  # Initialize the response object
-    
-        # Save the updated user data to Firestore
-        result = self.save_to_firestore()
-
-        # Set a success message in the response payload
-        if result.is_successful():
-            result.set_payload(f"User with id {self.user_id} was updated")
-
-        return result
-
+        return self.save_to_firestore()
 
     def remove(user_id: str) -> Response:
         """Removes a user from the Firestore database.
