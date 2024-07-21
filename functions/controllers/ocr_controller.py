@@ -8,7 +8,7 @@ import io
 import json
 import logging
 from firebase_functions import https_fn
-from services.ocr_service import process_receipt, extract_text
+from services.ocr_service import process_receipt_image, extract_text
 import tempfile
 from functools import wraps
 
@@ -100,7 +100,7 @@ def process_receipt(req: https_fn.Request) -> https_fn.Response:
                 }), status=400, content_type='application/json')
             
             logging.info("Parsing extracted text...")
-            parsed_data = process_receipt(extracted_text)
+            parsed_data = process_receipt_image(extracted_text)
             logging.info(f"Parsed data: {parsed_data}")
             
             # Prepare the response data
