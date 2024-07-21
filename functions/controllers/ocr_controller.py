@@ -8,7 +8,7 @@ import io
 import json
 import logging
 from firebase_functions import https_fn
-from services.ocr_service import extract_receipt_data, extract_text
+from services.ocr_service import process_receipt, extract_text
 import tempfile
 from functools import wraps
 
