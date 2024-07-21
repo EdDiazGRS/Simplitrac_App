@@ -11,6 +11,8 @@ from firebase_admin import firestore, credentials, initialize_app
 import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
+from openai import OpenAI
+
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -24,6 +26,9 @@ root_path = f'{curr_path}/../'
 
 # Get the service account credentials from the environment variable
 env_string = os.getenv("SECRET_KEY_FOR_FIREBASE")
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 # Append to NLTK paths
 nltk.data.path.append(f'{root_path}nltk_data')
@@ -120,9 +125,41 @@ def extract_text(image_file):
     if not texts:
         return None
     else:
-        #call the open ai service with text and respond with json
-        #store json
-        return texts[0].description # return whatever the frontend needs(json)
+       
+        return texts[0].description 
+    
+def process_receipt(extracted_text):
+    """Process the extracted text using OpenAI API."""
+    list_of_categories = "Vehicle, Insurance/health, Rent/mortgage, Meals, Travels, Supplies, Cellphone, Utilities"
+    prompt = f"""
+    Given this extracted text from a receipt:
+    {extracted_text}
+    Return a JSON object with the vendor name, date, amount, and category from this list of categories : ({list_of_categories}). Do not include any Markdown formatting or code block syntax in your response.
+    """
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a skilled financial professional with detailed accounting skills."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        # Extract the content from the response
+        result = response.choices[0].message.content
+        
+        # Attempt to parse the result as JSON
+        try:
+            parsed_result = json.loads(result)
+            return parsed_result
+        except json.JSONDecodeError:
+            logging.error("Failed to parse the OpenAI response as JSON")
+            return result  # Return the raw string if it's not valid JSON
+
+    except Exception as e:
+        logging.error(f"Error in OpenAI API call: {str(e)}")
+        return None
 
 
 # def parse_receipt_text(text):
@@ -144,106 +181,106 @@ def extract_text(image_file):
 #     }
 #     return data
 
-def extract_date(text):
-    """Extract date using regex."""
-    date_patterns = [
-        r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b',
-        r'\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b',
-        r'\b\d{1,2}\s+\w+\s+\d{4}\b',
-        r'\d{1,2}/\d{1,2}/\d{4}',  # MM/DD/YYYY
-        r'\d{1,2}-\d{1,2}-\d{4}',  # MM-DD-YYYY
-        r'\d{1,2}/\d{1,2}/\d{2}',  # MM/DD/YY
-        r'\d{1,2}-\d{1,2}-\d{2}',  # MM-DD-YY
-    ]
-    for pattern in date_patterns:
-        match = re.search(pattern, text)
-        if match:
-            return match.group()
-    return None
+# def extract_date(text):
+#     """Extract date using regex."""
+#     date_patterns = [
+#         r'\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b',
+#         r'\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b',
+#         r'\b\d{1,2}\s+\w+\s+\d{4}\b',
+#         r'\d{1,2}/\d{1,2}/\d{4}',  # MM/DD/YYYY
+#         r'\d{1,2}-\d{1,2}-\d{4}',  # MM-DD-YYYY
+#         r'\d{1,2}/\d{1,2}/\d{2}',  # MM/DD/YY
+#         r'\d{1,2}-\d{1,2}-\d{2}',  # MM-DD-YY
+#     ]
+    # for pattern in date_patterns:
+    #     match = re.search(pattern, text)
+    #     if match:
+    #         return match.group()
+    # return None
 
 
-def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
-    lines = text.split('\n')
-    data = {
-        'date': None,
-        'subtotal': None,
-        'tax': None,
-        'total': None,
-        'store_name': None,
-        'created_at': None,
-        'vendor': None,
-        'amount': None
-    }
+# def extract_receipt_data(text: str) -> Dict[str, Optional[str]]:
+#     lines = text.split('\n')
+#     data = {
+#         'date': None,
+#         'subtotal': None,
+#         'tax': None,
+#         'total': None,
+#         'store_name': None,
+#         'created_at': None,
+#         'vendor': None,
+#         'amount': None
+#     }
 
-    #Extract store name (usually in the first few lines)
-    for i, line in enumerate(lines[:5]):
-        if len(line.strip()) > 0 and not re.search(r'\d', line):  # Look for non-empty lines without numbers
-            data['store_name'] = line.strip()
-            break
-        if i == 4 and not data['store_name']:  # If no store name found in first 5 lines, use the first non-empty line
-            for line in lines:
-                if len(line.strip()) > 0:
-                    data['store_name'] = line.strip()
-                    break
+    # #Extract store name (usually in the first few lines)
+    # for i, line in enumerate(lines[:5]):
+    #     if len(line.strip()) > 0 and not re.search(r'\d', line):  # Look for non-empty lines without numbers
+    #         data['store_name'] = line.strip()
+    #         break
+    #     if i == 4 and not data['store_name']:  # If no store name found in first 5 lines, use the first non-empty line
+    #         for line in lines:
+    #             if len(line.strip()) > 0:
+    #                 data['store_name'] = line.strip()
+    #                 break
 
-    # Extract date
-    date_pattern = r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b'
-    for line in lines:
-        date_match = re.search(date_pattern, line)
-        if date_match:
-            data['date'] = date_match.group()
-            break
+    # # Extract date
+    # date_pattern = r'\b\d{1,2}[/.-]\d{1,2}[/.-]\d{2,4}\b'
+    # for line in lines:
+    #     date_match = re.search(date_pattern, line)
+    #     if date_match:
+    #         data['date'] = date_match.group()
+    #         break
 
     # Extract subtotal, tax, and total
-    subtotal_found = False
-    for i, line in enumerate(lines):
-        # Subtotal
-        if re.search(r'\b(Subtotal|Sub[ -]?total|Items\s+Subtotal)\b', line, re.IGNORECASE) and not subtotal_found:
-            subtotal_match = re.search(r'\$?(\d+\.\d{2})', line)
-            if subtotal_match:
-                data['subtotal'] = subtotal_match.group(1)
-                subtotal_found = True
-            elif i + 1 < len(lines):
-                subtotal_match = re.search(r'\$?(\d+\.\d{2})', lines[i + 1])
-                if subtotal_match:
-                    data['subtotal'] = subtotal_match.group(1)
-                    subtotal_found = True
+    # subtotal_found = False
+    # for i, line in enumerate(lines):
+    #     # Subtotal
+    #     if re.search(r'\b(Subtotal|Sub[ -]?total|Items\s+Subtotal)\b', line, re.IGNORECASE) and not subtotal_found:
+    #         subtotal_match = re.search(r'\$?(\d+\.\d{2})', line)
+    #         if subtotal_match:
+    #             data['subtotal'] = subtotal_match.group(1)
+    #             subtotal_found = True
+    #         elif i + 1 < len(lines):
+    #             subtotal_match = re.search(r'\$?(\d+\.\d{2})', lines[i + 1])
+    #             if subtotal_match:
+    #                 data['subtotal'] = subtotal_match.group(1)
+    #                 subtotal_found = True
 
-        # Tax
-        if re.search(r'\b(Tax|Sales\s+Tax)\b', line, re.IGNORECASE):
-            tax_match = re.search(r'\$?(\d+\.\d{2})', line)
-            if tax_match:
-                data['tax'] = tax_match.group(1)
-            elif i + 1 < len(lines):
-                tax_match = re.search(r'\$?(\d+\.\d{2})', lines[i + 1])
-                if tax_match:
-                    data['tax'] = tax_match.group(1)
+        # # Tax
+        # if re.search(r'\b(Tax|Sales\s+Tax)\b', line, re.IGNORECASE):
+        #     tax_match = re.search(r'\$?(\d+\.\d{2})', line)
+        #     if tax_match:
+        #         data['tax'] = tax_match.group(1)
+        #     elif i + 1 < len(lines):
+        #         tax_match = re.search(r'\$?(\d+\.\d{2})', lines[i + 1])
+        #         if tax_match:
+        #             data['tax'] = tax_match.group(1)
 
-        # Total
-        if re.search(r'\b(Total|Grand\s+Total)\b', line, re.IGNORECASE):
-            total_matches = re.findall(r'\$?(\d+\.\d{2})', line)
-            if total_matches:
-                data['total'] = total_matches[-1]  # Take the last match if multiple found
-            elif i + 1 < len(lines):
-                total_matches = re.findall(r'\$?(\d+\.\d{2})', lines[i + 1])
-                if total_matches:
-                    data['total'] = total_matches[-1]  # Take the last match if multiple found
+        # # Total
+        # if re.search(r'\b(Total|Grand\s+Total)\b', line, re.IGNORECASE):
+        #     total_matches = re.findall(r'\$?(\d+\.\d{2})', line)
+        #     if total_matches:
+        #         data['total'] = total_matches[-1]  # Take the last match if multiple found
+        #     elif i + 1 < len(lines):
+        #         total_matches = re.findall(r'\$?(\d+\.\d{2})', lines[i + 1])
+        #         if total_matches:
+        #             data['total'] = total_matches[-1]  # Take the last match if multiple found
 
-    # If tax is not found, try to calculate it
-    if data['subtotal'] and data['total'] and not data['tax']:
-        try:
-            subtotal = float(data['subtotal'])
-            total = float(data['total'])
-            calculated_tax = total - subtotal
-            data['tax'] = f"{calculated_tax:.2f}"
-        except ValueError:
-            pass
+    # # If tax is not found, try to calculate it
+    # if data['subtotal'] and data['total'] and not data['tax']:
+    #     try:
+    #         subtotal = float(data['subtotal'])
+    #         total = float(data['total'])
+    #         calculated_tax = total - subtotal
+    #         data['tax'] = f"{calculated_tax:.2f}"
+    #     except ValueError:
+    #         pass
 
-    data['created_at'] = data.get("date")
-    data['vendor'] = data.get("store_name")
-    data['amount'] = data.get("total")
+    # data['created_at'] = data.get("date")
+    # data['vendor'] = data.get("store_name")
+    # data['amount'] = data.get("total")
 
-    return data
+    # return data
 
 
 # def store_receipt_data(collection_name, document_data):
