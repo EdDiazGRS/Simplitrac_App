@@ -100,7 +100,7 @@ def process_receipt(req: https_fn.Request) -> https_fn.Response:
                 }), status=400, content_type='application/json')
             
             logging.info("Parsing extracted text...")
-            parsed_data = extract_receipt_data(extracted_text)
+            parsed_data = process_receipt(extracted_text)
             logging.info(f"Parsed data: {parsed_data}")
             
             # Prepare the response data
