@@ -128,7 +128,7 @@ def extract_text(image_file):
        
         return texts[0].description 
     
-def process_receipt(extracted_text):
+def process_receipt_image(extracted_text):
     """Process the extracted text using OpenAI API."""
     list_of_categories = "Vehicle, Insurance/health, Rent/mortgage, Meals, Travels, Supplies, Cellphone, Utilities"
     prompt = f"""
