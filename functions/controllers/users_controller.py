@@ -74,6 +74,7 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         user_instance = user.User()
 
+    # TODO comment the next 3 blocks when testing
     if not access_token:
         return generate_http_response("A token is needed to access this resource", 400)
 
@@ -120,7 +121,8 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     if user_instance.user_id != user_id:
         return generate_http_response(f"User {user_id} not found", 400)
 
-    return https_fn.Response(f"{user_instance.create_json_string(True)}", 200)
+    # return https_fn.Response(f"{user_instance.create_json_string(True)}", 200)
+    return https_fn.Response(json.dumps(user_instance.serialize(True)), 200)
         
 
 

@@ -2,7 +2,7 @@ from models.user import User
 from models.response import Response
 import string
 import random
-
+import uuid
 
 def create_user(user: User) -> Response:
     """Creates a new user in the Firestore database.
@@ -26,7 +26,7 @@ def create_user(user: User) -> Response:
         communicating with Firestore during the save operation.
     """
     if not user.user_id:
-        user.user_id = "".join(random.choices(string.ascii_letters + string.digits, k=16))
+        user.user_id = str(uuid.uuid4())
 
     return user.save_to_firestore()
 
@@ -43,7 +43,8 @@ def update_user(user: User) -> Response:
     Note:
         This function assumes that the User object (`user`) already has the updated data.
     """
-    return user.update_user_in_firestore()
+
+    return user.save_to_firestore()
 
 
 def delete_user(user_id: str) -> Response:
