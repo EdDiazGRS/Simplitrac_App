@@ -8,6 +8,7 @@ from models.category import Category
 from models.transaction import Transaction
 from protocols.user_protocol import UserProtocol
 from models.response import Response
+import uuid
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -101,12 +102,10 @@ class User(UserProtocol):
         if self._user_id:
             transactions_ref = db.collection(self.class_name).document(str(self._user_id)).collection(Transaction.class_name)
             transaction_docs = transactions_ref.stream()
-            # user_data['transactions'] = [doc.to_dict() for doc in transaction_docs]
             self._transactions.extend(doc.to_dict() for doc in transaction_docs)
 
             categories_ref = db.collection(self.class_name).document(str(self._user_id)).collection(Category.class_name)
             category_docs = categories_ref.stream()
-            # user_data['categories'] = [doc.to_dict() for doc in category_docs]
             self._categories.extend(doc.to_dict() for doc in category_docs)
 
 
@@ -244,6 +243,43 @@ class User(UserProtocol):
             response.add_error("User ID is required to save the data to Firestore")
             return response
 
+        # Prepare payload details
+        transactions_list = []
+        categories_list = []
+        # iterate over all transactions
+        for transaction in self._transactions:
+            # check if transaction has a category_id
+            if not transaction._category_id:
+                # if no category_id, search for category name in firebase
+                category = db.collection_group(Category.class_name).where('category_name', '==', transaction._category_name).get()
+                
+                # remove duplicate category_id by assigning to set
+                cat_set = set()
+                for cat in category:
+                    cat_set.add(cat.to_dict()['category_id'])
+                cat_id_list = list(cat_set)
+
+                match len(cat_id_list):
+                    # if category_name doesn't exist, create new category_id
+                    case 0:
+                        transaction._category_id = str(uuid.uuid4())
+                        new_cat = Category({"category_id" : transaction._category_id, "category_name" : transaction.category_name})
+                        self._categories.append(new_cat)
+                    # if category_name exists, assign category_id and add to user category collection
+                    case 1:
+                        # transaction._category_id = category[0].to_dict()['category_id']
+                        transaction._category_id = cat_id_list[0]
+                        add_cat = Category({"category_id" : transaction._category_id, "category_name" : transaction.category_name})
+                        self._categories.append(add_cat)
+                    # This instance should never happen
+                    case _:
+                        response.add_error(f"{len(cat_id_list)} category entries with same name found on Firebase.")
+                        return response
+            transactions_list.append(transaction.serialize())
+
+        for cat in self._categories:
+            categories_list.append(cat.serialize())
+
         try:
             # Save to User collection
             user_ref = db.collection(self.class_name).document(str(self._user_id))
@@ -265,40 +301,14 @@ class User(UserProtocol):
             response.add_error(f"Failed to save data: {str(e)}")
             return response
 
-        # Prepare payload details
-        transactions_list = []
-        for transaction in self._transactions:
-            transactions_list.append(transaction.serialize())
-
-        categories_list = []
-        for cat in self._categories:
-            categories_list.append(cat.serialize())
-
         # Set the payload with detailed saved information
         response_payload = self.serialize(False) # not getting_existing_user()
-        response_payload['transactions'] = transactions_list
-        response_payload['categories'] = categories_list
+        response_payload[Transaction.class_name] = transactions_list
+        response_payload[Category.class_name] = categories_list
         response.set_payload(response_payload)
 
         return response
  
-
-    def update_user_in_firestore(self) -> Response:
-        """Updates the user data in the Firestore database.
-    
-        This method assumes that the `User` object (`self`) has already been modified with the new data.
-        It calls the `save_to_firestore()` method (not shown here) to persist the changes to Firestore.
-        It then returns a `Response` object indicating the success of the operation.
-    
-        Args:
-            self: The User object whose data will be updated in Firestore.
-    
-        Returns:
-            A Response object from the save_to_firestore() method
-        """
-    
-        return self.save_to_firestore()
-
     def remove(user_id: str) -> Response:
         """Removes a user from the Firestore database.
     
@@ -366,6 +376,7 @@ class User(UserProtocol):
 
 
     def serialize(self, getting_user: bool = False) -> dict:
+    # def serialize(self, getting_user: bool = False) -> str:
         """Serializes a User object into a dictionary for JSON representation.
 
         This method converts a User object's attributes into a dictionary format,
@@ -408,47 +419,3 @@ class User(UserProtocol):
                 'last_login': self._last_login,
                 'admin': self._admin
             }
-
-    def create_json_string(self, getting_user: bool = False) -> str:
-        """Serializes a User object into a dictionary for JSON representation.
-
-        This method converts a User object's attributes into a dictionary format,
-        making it suitable for serialization into JSON. The serialization behavior
-        can be customized based on the `getting_user` flag:
-
-        - If `getting_user` is True, the serialized dictionary will include all user attributes,
-          including subcollections (e.g., 'categories' and 'transactions').
-        - If `getting_user` is False (default), the subcollections will be excluded from the serialization.
-
-        Args:
-            getting_user (bool, optional): Determines whether to include subcollections in the output.
-                                          Defaults to False.
-
-        Returns:
-            dict: A dictionary representation of the User object, with keys corresponding to attributes
-                  and values representing their serialized values.
-        """
-        if getting_user:
-            return json.dumps({
-                'user_id': self._user_id,
-                'access_token': self._access_token,
-                'email': self._email,
-                'first_name': self._first_name,
-                'last_name': self._last_name,
-                'created_at': self._created_at,
-                'last_login': self._last_login,
-                'admin': self._admin,
-                'categories': self._categories,
-                'transactions': self._transactions
-            })
-        else:
-            return json.dumps({
-                'user_id': self._user_id,
-                'access_token': self._access_token,
-                'email': self._email,
-                'first_name': self._first_name,
-                'last_name': self._last_name,
-                'created_at': self._created_at,
-                'last_login': self._last_login,
-                'admin': self._admin
-            })
