@@ -71,5 +71,5 @@ class Category(CategoryProtocol):
     def serialize(self) -> dict:
         return {
                     'category_id': str(self.category_id) if self.category_id else str(uuid.uuid4()),
-                    'category_name': self.category_name
+                    'category_name': self.category_name.strip().replace("  ", " ").title()
                 }
