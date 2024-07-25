@@ -21,6 +21,7 @@ class Transaction(TransactionProtocol):
         """
         self._transaction_id: Optional[uuid.UUID] = uuid.uuid4()
         self._created_at: Optional[datetime] = None
+        self._transaction_date: Optional[datetime] = None
         self._amount: Optional[float] = None
         self._vendor: Optional[str] = None
         self._catgory_name: Optional[str] = None
@@ -31,6 +32,7 @@ class Transaction(TransactionProtocol):
         if data:
             self._transaction_id = data.get('transaction_id')
             self._created_at = data.get('created_at')
+            self._transaction_date = data.get('transaction_date')
             self._amount = data.get('amount')
             self._vendor = data.get('vendor')
             self._category_name = data.get('category_name')
@@ -77,6 +79,26 @@ class Transaction(TransactionProtocol):
             value (datetime): The date and time when the transaction was created.
         """
         self._created_at = value
+
+    @property
+    def transaction_date(self) -> Optional[datetime]:
+        """
+        Gets the creation date and time of the transaction.
+
+        Returns:
+            Optional[datetime]: The date and time when the transaction was created.
+        """
+        return self._transaction_date
+
+    @transaction_date.setter
+    def transaction_date(self, value: datetime) -> None:
+        """
+        Sets the creation date and time of the transaction.
+
+        Args:
+            value (datetime): The date and time when the transaction was created.
+        """
+        self._transaction_date = value
 
     @property
     def amount(self) -> Optional[float]:
@@ -202,6 +224,7 @@ class Transaction(TransactionProtocol):
         return {
             'transaction_id': str(self.transaction_id) if self.transaction_id else str(uuid.uuid4()),
             'created_at': self.created_at,
+            'transaction_date': self.transaction_date,
             'amount': self.amount,
             'vendor': self.vendor.strip().replace("  ", " ").title(),
             'category_name': self.category_name.strip().replace("  ", " ").title(),  
