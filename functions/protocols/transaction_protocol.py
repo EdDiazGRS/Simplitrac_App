@@ -6,6 +6,7 @@ import uuid
 class TransactionProtocol(Protocol):
     _transaction_id: Optional[uuid.UUID]
     _created_at: Optional[datetime]
+    _transaction_date: Optional[datetime]
     _amount: Optional[float]
     _vendor: Optional[str]
     _category_name: Optional[str] 
@@ -25,6 +26,12 @@ class TransactionProtocol(Protocol):
 
     @created_at.setter
     def created_at(self, value: datetime) -> None: ...
+
+    @property
+    def transaction_date(self) -> Optional[datetime]: ...
+
+    @transaction_date.setter
+    def transaction_date(self, value: datetime) -> None: ...
 
     @property
     def amount(self) -> Optional[float]: ...
