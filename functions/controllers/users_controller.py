@@ -75,17 +75,17 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
         user_instance = user.User()
 
     # TODO comment the next 3 blocks when testing
-    # if not access_token:
-    #     return generate_http_response("A token is needed to access this resource", 400)
+    if not access_token:
+        return generate_http_response("A token is needed to access this resource", 400)
 
-    # try:
-    #     if not user_instance.is_authenticated():
-    #         response.add_error("User could not be authenticated")
-    #         return generate_http_response(response.get_errors(), 400)
+    try:
+        if not user_instance.is_authenticated():
+            response.add_error("User could not be authenticated")
+            return generate_http_response(response.get_errors(), 400)
 
-    # except Exception as e:
-    #     response.add_error("There was an issue authenticating the user")
-    #     return generate_http_response(response.get_errors(), 400)
+    except Exception as e:
+        response.add_error("There was an issue authenticating the user")
+        return generate_http_response(response.get_errors(), 400)
 
     response: Response = users_service.add_new_user(user_instance)
     
