@@ -204,7 +204,7 @@ class Transaction(TransactionProtocol):
             'created_at': self.created_at,
             'amount': self.amount,
             'vendor': self.vendor.strip().replace("  ", " ").title(),
-            'category_name': self.category_name.strip().replace("  ", " ").title(),  
+            'category_name': self.category_name.strip().replace("  ", " ").title() if self.category_name else None,
             'category_id': str(self.category_id) if self.category_id else None,
             'picture_id': str(self.picture_id) if self.picture_id else None,
             'is_successful': self.is_successful,

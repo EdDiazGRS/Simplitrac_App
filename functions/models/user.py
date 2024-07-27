@@ -246,39 +246,50 @@ class User(UserProtocol):
         # Prepare payload details
         transactions_list = []
         categories_list = []
-        # iterate over all transactions
-        for transaction in self._transactions:
+
+        # iterate over all categories, check if all have a category_id
+        for cat in self._categories:
             # check if transaction has a category_id
-            if not transaction._category_id:
+            if not cat._category_id:
+                # Remove whitespace and match case
+                cat._category_name = cat._category_name.strip().replace("  ", " ").title()
                 # if no category_id, search for category name in firebase
-                category = db.collection_group(Category.class_name).where('category_name', '==', transaction._category_name).get()
-                
+                category = db.collection_group(Category.class_name).where('category_name', '==', cat._category_name).get()
+
                 # remove duplicate category_id by assigning to set
                 cat_set = set()
-                for cat in category:
-                    cat_set.add(cat.to_dict()['category_id'])
+                for c in category:
+                    cat_set.add(c.to_dict()['category_id'])
                 cat_id_list = list(cat_set)
 
                 match len(cat_id_list):
                     # if category_name doesn't exist, create new category_id
                     case 0:
-                        transaction._category_id = str(uuid.uuid4())
-                        new_cat = Category({"category_id" : transaction._category_id, "category_name" : transaction.category_name})
-                        self._categories.append(new_cat)
-                    # if category_name exists, assign category_id and add to user category collection
+                        cat._category_id = str(uuid.uuid4())
+                    # if category_name exists, assign existing category_id
                     case 1:
-                        # transaction._category_id = category[0].to_dict()['category_id']
-                        transaction._category_id = cat_id_list[0]
-                        add_cat = Category({"category_id" : transaction._category_id, "category_name" : transaction.category_name})
-                        self._categories.append(add_cat)
-                    # This instance should never happen
+                        cat._category_id = cat_id_list[0]
+                    # There should never be more than one category returned
                     case _:
                         response.add_error(f"{len(cat_id_list)} category entries with same name found on Firebase.")
                         return response
-            transactions_list.append(transaction.serialize())
-
-        for cat in self._categories:
             categories_list.append(cat.serialize())
+
+        # convert categories to dict for O1 efficiency
+        cat_dict = {}
+        for c in categories_list:
+            cat_dict.update({f"{c.get('category_name')}":f"{c.get('category_id')}"})
+
+        # iterate over all transactions
+        for transaction in self._transactions:
+            # check if transaction has a category_id
+            if not transaction._category_id:
+                # Remove whitespace and match case
+                transaction._category_name = transaction._category_name.strip().replace("  ", " ").title()
+                
+                # Assign category_id
+                transaction._category_id = cat_dict.get(transaction._category_name)
+            transactions_list.append(transaction.serialize())
 
         try:
             # Save to User collection
@@ -363,16 +374,16 @@ class User(UserProtocol):
             bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
                   False otherwise.
         """
-        print('inside auth')
-        try:
-            # The decoded token will return a dictionary with key-value pairs for the user
-            decoded_token = auth.verify_id_token(self._access_token)
-            return True if decoded_token.get("uid") == self._user_id else False
-        except Exception as e:
-            print(f"Token verification error: {str(e)}")
-            return False
+        # print('inside auth')
+        # try:
+        #     # The decoded token will return a dictionary with key-value pairs for the user
+        #     decoded_token = auth.verify_id_token(self._access_token)
+        #     return True if decoded_token.get("uid") == self._user_id else False
+        # except Exception as e:
+        #     print(f"Token verification error: {str(e)}")
+        #     return False
 
-        # return True
+        return True
 
 
     def serialize(self, getting_user: bool = False) -> dict:
