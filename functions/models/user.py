@@ -252,15 +252,14 @@ class User(UserProtocol):
             # check if transaction has a category_id
             if not cat._category_id:
                 # Remove whitespace and match case
-                cat._category_name.strip().replace("  ", " ").title()
-
+                cat._category_name = cat._category_name.strip().replace("  ", " ").title()
                 # if no category_id, search for category name in firebase
                 category = db.collection_group(Category.class_name).where('category_name', '==', cat._category_name).get()
+
                 # remove duplicate category_id by assigning to set
                 cat_set = set()
                 for c in category:
                     cat_set.add(c.to_dict()['category_id'])
-                    print(c.to_dict()['category_id'])
                 cat_id_list = list(cat_set)
 
                 match len(cat_id_list):
@@ -286,7 +285,7 @@ class User(UserProtocol):
             # check if transaction has a category_id
             if not transaction._category_id:
                 # Remove whitespace and match case
-                transaction._category_name.strip().replace("  ", " ").title()
+                transaction._category_name = transaction._category_name.strip().replace("  ", " ").title()
                 
                 # Assign category_id
                 transaction._category_id = cat_dict.get(transaction._category_name)
