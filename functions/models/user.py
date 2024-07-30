@@ -251,8 +251,6 @@ class User(UserProtocol):
         for cat in self._categories:
             # check if category has a category_id
             if not cat._category_id:
-                # Remove whitespace and match case
-                cat._category_name = cat._category_name
                 # if no category_id, search for category name in firebase
                 category = db.collection_group(Category.class_name).where('category_name', '==', cat._category_name).get()
                 # category = db.collection_group(Category.class_name).where(filter=FieldFilter('category_name', '==', cat._category_name)).get()
@@ -285,9 +283,6 @@ class User(UserProtocol):
         for transaction in self._transactions:
             # check if transaction has a category_id
             if not transaction._category_id:
-                # Remove whitespace and match case
-                transaction._category_name = transaction._category_name
-                
                 # Assign category_id
                 transaction._category_id = cat_dict.get(transaction._category_name)
             transactions_list.append(transaction.serialize())
