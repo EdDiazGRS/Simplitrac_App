@@ -26,7 +26,7 @@ class Category(CategoryProtocol):
         """
         if data:
             self._category_id = data.get('category_id')
-            self._category_name = data.get('category_name').strip().replace("  ", " ").title()
+            self._category_name = data.get('category_name').strip().replace("  ", " ").title() if data.get('category_name') else None
 
     @property
     def category_id(self) -> Optional[uuid.UUID]:
@@ -56,7 +56,7 @@ class Category(CategoryProtocol):
         Returns:
             Optional[str]: The name of the category.
         """
-        return self._category_name.strip().replace("  ", " ").title()
+        return self._category_name.strip().replace("  ", " ").title() if self._category_name else None
 
     @category_name.setter
     def category_name(self, value: str) -> None:
@@ -71,5 +71,5 @@ class Category(CategoryProtocol):
     def serialize(self) -> dict:
         return {
                     'category_id': str(self.category_id) if self.category_id else str(uuid.uuid4()),
-                    'category_name': self.category_name.strip().replace("  ", " ").title()
+                    'category_name': self.category_name.strip().replace("  ", " ").title() if self._category_name else None
                 }
