@@ -249,7 +249,7 @@ class User(UserProtocol):
 
         # iterate over all categories, check if all have a category_id
         for cat in self._categories:
-            # check if transaction has a category_id
+            # check if category has a category_id
             if not cat._category_id:
                 # Remove whitespace and match case
                 cat._category_name = cat._category_name
