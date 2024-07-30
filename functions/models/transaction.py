@@ -32,8 +32,8 @@ class Transaction(TransactionProtocol):
             self._transaction_id = data.get('transaction_id')
             self._created_at = data.get('created_at')
             self._amount = data.get('amount')
-            self._vendor = data.get('vendor').strip().replace("  ", " ").capitalize() if data.get('vendor') else None
-            self._category_name = data.get('category_name').strip().replace("  ", " ").capitalize() if data.get('category_name') else None
+            self._vendor = data.get('vendor').strip().replace("  ", " ").lower() if data.get('vendor') else None
+            self._category_name = data.get('category_name').strip().replace("  ", " ").lower() if data.get('category_name') else None
             self._category_id = data.get('category_id')
             self._picture_id = data.get('picture_id')
             self._is_successful = data.get('is_successful')
@@ -106,7 +106,7 @@ class Transaction(TransactionProtocol):
         Returns:
             Optional[str]: The vendor associated with the transaction.
         """
-        return self._vendor.strip().replace("  ", " ").capitalize() if self._vendor else None
+        return self._vendor.strip().replace("  ", " ").lower() if self._vendor else None
 
     @vendor.setter
     def vendor(self, value: str) -> None:
@@ -116,7 +116,7 @@ class Transaction(TransactionProtocol):
         Args:
             value (str): The vendor associated with the transaction.
         """
-        self._vendor = value.strip().replace("  ", " ").capitalize() if self._vendor else None
+        self._vendor = value.strip().replace("  ", " ").lower() if self._vendor else None
 
     @property
     def category_id(self) -> Optional[uuid.UUID]:
@@ -136,7 +136,7 @@ class Transaction(TransactionProtocol):
         Returns:
             Optional[str]: The category name of the transaction.
         """
-        return self._category_name.strip().replace("  ", " ").capitalize() if self._category_name else None
+        return self._category_name.strip().replace("  ", " ").lower() if self._category_name else None
 
     @category_name.setter
     def category_name(self, value: str) -> None:  # Added setter
@@ -146,7 +146,7 @@ class Transaction(TransactionProtocol):
         Args:
             value (str): The category name of the transaction.
         """
-        self._category_name = value.strip().replace("  ", " ").capitalize() if self._category_name else None
+        self._category_name = value.strip().replace("  ", " ").lower() if self._category_name else None
 
     @category_id.setter
     def category_id(self, value: uuid.UUID) -> None:
@@ -203,8 +203,8 @@ class Transaction(TransactionProtocol):
             'transaction_id': str(self.transaction_id) if self.transaction_id else str(uuid.uuid4()),
             'created_at': self.created_at,
             'amount': self.amount,
-            'vendor': self.vendor.strip().replace("  ", " ").capitalize() if self.vendor else None,
-            'category_name': self.category_name.strip().replace("  ", " ").capitalize() if self.category_name else None,
+            'vendor': self.vendor.strip().replace("  ", " ").lower() if self.vendor else None,
+            'category_name': self.category_name.strip().replace("  ", " ").lower() if self.category_name else None,
             'category_id': str(self.category_id) if self.category_id else None,
             'picture_id': str(self.picture_id) if self.picture_id else None,
             'is_successful': self.is_successful
