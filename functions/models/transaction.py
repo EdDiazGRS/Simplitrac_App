@@ -19,7 +19,7 @@ class Transaction(TransactionProtocol):
         Args:
             data (Optional[Dict[str, Any]]): The data to initialize the transaction, typically from a dictionary.
         """
-        self._transaction_id: Optional[uuid.UUID] = uuid.uuid4()
+        self._transaction_id: Optional[uuid.UUID] = None
         self._created_at: Optional[datetime] = None
         self._amount: Optional[float] = None
         self._vendor: Optional[str] = None
@@ -207,5 +207,5 @@ class Transaction(TransactionProtocol):
             'category_name': self.category_name.strip().replace("  ", " ").capitalize() if self.category_name else None,
             'category_id': str(self.category_id) if self.category_id else None,
             'picture_id': str(self.picture_id) if self.picture_id else None,
-            'is_successful': self.is_successful,
+            'is_successful': self.is_successful
         }
