@@ -47,53 +47,57 @@ def cors_enabled_function(func):
 @cors_enabled_function
 @https_fn.on_request()
 def create_new_user(req: https_fn.Request) -> https_fn.Response:
-    print("Inside create user fiunction")
-    """Creates a new user in the Firestore database.
+    print("Inside create_new_user function")
+    print(f"Request method: {req.method}")
+    print(f"Request headers: {dict(req.headers)}")
+    print(f"Request data type: {type(req.data)}")
 
-    Args:
-        req (https_fn.Request): The HTTP request object containing the new user data in JSON format.
+    if isinstance(req.data, bytes):
+        print(f"Request data (decoded): {req.data.decode('utf-8')}")
+    else:
+        print(f"Request data: {req.data}")
 
-    Returns:
-        https_fn.Response: An HTTP response indicating success or failure, containing the ID of the new user
-                           or an error message.
-    """
     data = None
     user_instance = None
     access_token = None
     response = Response()
 
-
+    # Try to get JSON data from the request
     try:
-        data = req.get_json()
-    except:
-        pass
+        if req.method == "POST":
+            if req.headers and req.headers.get('Content-Type', '').startswith('application/json'):
+                if req.data:
+                    if isinstance(req.data, bytes):
+                        data = json.loads(req.data.decode('utf-8'))
+                    elif isinstance(req.data, str):
+                        data = json.loads(req.data)
+                    else:
+                        print(f"Unexpected data type: {type(req.data)}")
+                else:
+                    print("Request body is empty")
+            else:
+                print(f"Unexpected Content-Type: {req.headers.get('Content-Type')}")
+        else:
+            print(f"Unexpected HTTP method: {req.method}")
+    except json.JSONDecodeError as e:
+        print(f"Failed to decode JSON from request body: {str(e)}")
+    except Exception as e:
+        print(f"An error occurred while parsing request data: {str(e)}")
 
     if data:
+        print(f"Received data: {data}")
         user_instance = user.User(data)
         access_token = user_instance.access_token
     else:
+        print("No data received, creating default User instance")
         user_instance = user.User()
 
-    # TODO comment the next 3 blocks when testing
-    if not access_token:
-        return generate_http_response("A token is needed to access this resource", 400)
-
-    try:
-        if not user_instance.is_authenticated():
-            response.add_error("User could not be authenticated")
-            return generate_http_response(response.get_errors(), 400)
-
-    except Exception as e:
-        response.add_error("There was an issue authenticating the user")
-        return generate_http_response(response.get_errors(), 400)
-
     response: Response = users_service.add_new_user(user_instance)
-    
+
     if response.is_successful():
         return https_fn.Response(f"{response.get_payload()}", 200)
     else:
-        return https_fn.Response(f'There was an error: {response.get_errors()}')
-
+        return https_fn.Response(f'There was an error: {response.get_errors()}', 400)
 
 @cors_enabled_function
 @https_fn.on_request()
@@ -146,14 +150,12 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
     access_token = None
     user_id = None
     user_instance = user.User()
-
     try:
         data = req.get_json()
         if not data:  # Check for empty JSON
             return generate_http_response('Request body must contain valid JSON data', 400)
-    except json.JSONDecodeError as e:  # Catch specific JSON decoding errors
+    except Exception as e:  # Catch specific JSON decoding errors
         return generate_http_response(f'Invalid JSON: {e}', 400)
-
     try:
         user_id = parse_qs(req.query_string.decode()).get('user_id', [None])[0]
         if not user_id:  # Explicitly check for missing user_id
