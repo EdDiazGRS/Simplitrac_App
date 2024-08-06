@@ -33,6 +33,8 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 # Append to NLTK paths
 nltk.data.path.append(f'{root_path}nltk_data')
 
+# I had to create this to solve the issue with Google OCR not being able to find the credentials it needs.
+# This file doesn't get stored in GitHub.
 
 @lambda _: _()
 def find_files():
