@@ -51,3 +51,19 @@ def delete_user(user_id: str) -> Response:
     """
 
     return users_repo.delete_user(user_id)
+
+def edit_transactions(user: User) -> Response:
+    """
+    Deletes an existing transactions from the database.
+
+    Args:
+        user_id (str): The unique identifier (e.g., UUID) of the user to delete.
+
+    Returns:
+        Response: A Response object:
+            - If successful, `result.is_successful()` is True and `result.get_payload()` contains any relevant data (e.g., a success message).
+            - If unsuccessful (user not found), `result.is_successful()` is False and `result.get_errors()` contains "This user does not exist".
+            - In case of other errors during the delete process, the `errors` attribute will contain an appropriate message.
+    """
+
+    return users_repo.edit_transactions(user)
