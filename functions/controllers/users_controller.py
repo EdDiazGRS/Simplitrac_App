@@ -1,6 +1,6 @@
 from firebase_functions import https_fn
 from models import user
-
+from models.transaction import Transaction
 from services import users_service
 from models.response import Response
 from urllib.parse import parse_qs
@@ -191,6 +191,47 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
 @cors_enabled_function
 @https_fn.on_request()
+def edit_transactions(req: https_fn.Request) -> https_fn.Response:
+    """Edits transactions from the database.
+
+    Args:
+        req (https_fn.Request): The HTTP request object containing the `user_id` in the query string.
+
+    Returns:
+        https_fn.Response: An HTTP response indicating success or failure of the deletion.
+    """
+    data = None
+    access_token = None
+    user_instance = user.User()
+    try:
+        data = req.get_json()
+        if not data:  # Check for empty JSON
+            return generate_http_response('Request body must contain valid JSON data', 400)
+    except Exception as e:  # Catch specific JSON decoding errors
+        return generate_http_response(f'Invalid JSON: {e}', 400)
+
+    try:
+        user_instance = user.User(data)
+
+    except Exception as e:  # Catch general exceptions for get_existing_user and User creation
+        return generate_http_response(str(e), 500)  # 500 Internal Server Error if unexpected
+
+    if not user_instance.user_id:  # Check if user found in database
+        return generate_http_response(f"User {user_id} not found.", 400)
+
+    if user_instance:
+        access_token = user_instance.access_token
+
+    edit_result = users_service.edit_transactions(user_instance)
+
+    if edit_result.is_successful():
+        return https_fn.Response(json.dumps(edit_result.get_payload()), 200)
+    else:
+        return generate_http_response(edit_result.get_errors(), 400)
+
+
+@cors_enabled_function
+@https_fn.on_request()
 def delete_user(req: https_fn.Request) -> https_fn.Response:
     """Deletes a user from the database.
 
@@ -214,7 +255,7 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
         return https_fn.Response(f"User with ID {user_id} deleted.")
     else:
         return generate_http_response(get_result.get_errors(), 400)
-        
+
 
 def generate_http_response(message: Union[str, list], code: int) -> https_fn.Response:
     """Generates an HTTP response with a JSON-formatted error message.

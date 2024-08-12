@@ -57,3 +57,15 @@ def delete_user(user_id: str) -> Response:
         Response: A `Response` object from `remove()` method.
     """
     return User.remove(user_id) 
+
+
+def edit_transactions(user: User) -> Response:
+    """Deletes existing transactions from the Firestore database.
+
+    Args:
+        user_id (str): The unique identifier of the user to delete.
+
+    Returns:
+        Response: A `Response` object from `delete_transactions()` method.
+    """
+    return user.edit_transactions() 
