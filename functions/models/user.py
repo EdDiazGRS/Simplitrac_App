@@ -360,10 +360,6 @@ class User(UserProtocol):
     def edit_transactions(self) -> Response:
         """Edits transactions on the Firestore database.
     
-        Args:
-            user_id: The unique identifier (UUID) of the user.
-            transactions: List of current transactions.
-    
         Returns:
             Response: An object indicating the outcome of the operation:
         """
@@ -391,16 +387,16 @@ class User(UserProtocol):
             bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
                   False otherwise.
         """
-        # print('inside auth')
-        # try:
-        #     # The decoded token will return a dictionary with key-value pairs for the user
-        #     decoded_token = auth.verify_id_token(self._access_token)
-        #     return True if decoded_token.get("uid") == self._user_id else False
-        # except Exception as e:
-        #     print(f"Token verification error: {str(e)}")
-        #     return False
+        print('inside auth')
+        try:
+            # The decoded token will return a dictionary with key-value pairs for the user
+            decoded_token = auth.verify_id_token(self._access_token)
+            return True if decoded_token.get("uid") == self._user_id else False
+        except Exception as e:
+            print(f"Token verification error: {str(e)}")
+            return False
 
-        return True
+        # return True
 
 
     def serialize(self, getting_user: bool = False) -> dict:

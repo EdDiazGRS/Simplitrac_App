@@ -23,7 +23,6 @@ def update_user(user: User) -> Response:
     Updates an existing user in the database.
 
     Args:
-        user_id (str): The unique identifier (e.g., UUID) of the user to update.
         user (User): The updated User object with new information.
 
     Returns:
@@ -54,10 +53,10 @@ def delete_user(user_id: str) -> Response:
 
 def edit_transactions(user: User) -> Response:
     """
-    Deletes an existing transactions from the database.
+    Edits an existing transactions from the database.
 
     Args:
-        user_id (str): The unique identifier (e.g., UUID) of the user to delete.
+        user (User): The updated User object with edited transaction information.
 
     Returns:
         Response: A Response object:
