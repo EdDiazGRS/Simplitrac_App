@@ -51,12 +51,12 @@ def delete_user(user_id: str) -> Response:
 
     return users_repo.delete_user(user_id)
 
-def edit_transactions(user: User) -> Response:
+def delete_transactions(user: User) -> Response:
     """
-    Edits an existing transactions from the database.
+    Deletes an existing transactions from the database.
 
     Args:
-        user (User): The updated User object with edited transaction information.
+        user (User): The updated User object with deleted transaction information.
 
     Returns:
         Response: A Response object:
@@ -65,4 +65,4 @@ def edit_transactions(user: User) -> Response:
             - In case of other errors during the delete process, the `errors` attribute will contain an appropriate message.
     """
 
-    return users_repo.edit_transactions(user)
+    return users_repo.delete_transactions(user)

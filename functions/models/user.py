@@ -361,8 +361,9 @@ class User(UserProtocol):
   
         return result
 
-    def edit_transactions(self) -> Response:
-        """Edits transactions on the Firestore database.
+    def delete_transactions(self) -> Response:
+        """
+        Deletes transactions on the Firestore database.
     
         Returns:
             Response: An object indicating the outcome of the operation:

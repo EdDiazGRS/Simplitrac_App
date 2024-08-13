@@ -191,8 +191,9 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
 
 @cors_enabled_function
 @https_fn.on_request()
-def edit_transactions(req: https_fn.Request) -> https_fn.Response:
-    """Edits transactions from the database.
+def delete_transactions(req: https_fn.Request) -> https_fn.Response:
+    """
+    Deletes transactions from the database.
 
     Args:
         req (https_fn.Request): The HTTP request object containing the `user_id` in the query string.
@@ -222,7 +223,7 @@ def edit_transactions(req: https_fn.Request) -> https_fn.Response:
     if user_instance:
         access_token = user_instance.access_token
 
-    edit_result = users_service.edit_transactions(user_instance)
+    edit_result = users_service.delete_transactions(user_instance)
 
     if edit_result.is_successful():
         return https_fn.Response(json.dumps(edit_result.get_payload()), 200)
