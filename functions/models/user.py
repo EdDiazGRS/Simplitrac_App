@@ -43,7 +43,7 @@ class User(UserProtocol):
             data (Optional[Union[str, Any]]): The data to initialize the user. Can be a JSON string or str.
         """
         self._user_id: Optional[str] = None
-        self._access_token: [Optional[str]] = None
+        self._access_token: Optional[str] = None
         self._email: Optional[str] = None
         self._first_name: Optional[str] = None
         self._last_name: Optional[str] = None
@@ -92,9 +92,9 @@ class User(UserProtocol):
         if user_doc.exists:
             user_data = user_doc.to_dict()
             self._initialize_from_data(user_data)
-            self._fetch_subcollections(user_data)
+            self._fetch_subcollections()
            
-    def _fetch_subcollections(self, user_data) -> None:
+    def _fetch_subcollections(self) -> None:
         """
         Fetches and initializes the transactions and categories subcollections from Firestore,
         adding them to the `user_data` dictionary.
@@ -102,7 +102,10 @@ class User(UserProtocol):
         if self._user_id:
             transactions_ref = db.collection(self.class_name).document(str(self._user_id)).collection(Transaction.class_name)
             transaction_docs = transactions_ref.stream()
-            self._transactions.extend(doc.to_dict() for doc in transaction_docs)
+            for doc in transaction_docs:
+                transaction = doc.to_dict()
+                transaction.pop('email')
+                self._transactions.append(transaction)
 
             categories_ref = db.collection(self.class_name).document(str(self._user_id)).collection(Category.class_name)
             category_docs = categories_ref.stream()
@@ -285,7 +288,8 @@ class User(UserProtocol):
             if not transaction._category_id:
                 # Assign category_id
                 transaction._category_id = cat_dict.get(transaction._category_name)
-            transactions_list.append(transaction.serialize())
+            transaction._email = self._email
+            transactions_list.append(transaction.serialize(False))
 
         try:
             # Save to User collection
@@ -295,7 +299,7 @@ class User(UserProtocol):
             # Save transactions to Transaction subcollection
             transactions_ref = user_ref.collection(Transaction.class_name)
             for transaction in self._transactions:
-                transaction_data = transaction.serialize()
+                transaction_data = transaction.serialize(False)
                 transactions_ref.document(transaction_data['transaction_id']).set(transaction_data)
 
             # Save categories to Category subcollection
