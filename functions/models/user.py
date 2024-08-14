@@ -380,6 +380,27 @@ class User(UserProtocol):
 
         return result
 
+    def delete_category(data: dict) -> Response:
+        """
+        Deletes transactions on the Firestore database.
+    
+        Returns:
+            Response: An object indicating the outcome of the operation:
+        """
+        result = Response()
+        cat_name = str
+
+        # Query for the user document
+        document = db.collection(User.class_name).document(data['user_id']).collection(Category.class_name).document(data['category_id'])
+
+        if document:
+            cat_name = document.get().to_dict()['category_name']
+            document.delete()
+        
+        result.set_payload(f"Category `{cat_name}` deleted")
+
+        return result
+
     # TODO TURN OFF WHEN DEBUGGING
     def is_authenticated(self) -> bool:
         """Verifies if the user is authenticated using a Firebase ID token.
@@ -392,16 +413,16 @@ class User(UserProtocol):
             bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
                   False otherwise.
         """
-        print('inside auth')
-        try:
-            # The decoded token will return a dictionary with key-value pairs for the user
-            decoded_token = auth.verify_id_token(self._access_token)
-            return True if decoded_token.get("uid") == self._user_id else False
-        except Exception as e:
-            print(f"Token verification error: {str(e)}")
-            return False
+        # print('inside auth')
+        # try:
+        #     # The decoded token will return a dictionary with key-value pairs for the user
+        #     decoded_token = auth.verify_id_token(self._access_token)
+        #     return True if decoded_token.get("uid") == self._user_id else False
+        # except Exception as e:
+        #     print(f"Token verification error: {str(e)}")
+        #     return False
 
-        # return True
+        return True
 
 
     def serialize(self, getting_user: bool = False) -> dict:

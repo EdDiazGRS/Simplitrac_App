@@ -70,3 +70,16 @@ def delete_transactions(user: User) -> Response:
         Response: A `Response` object from `delete_transactions()` method.
     """
     return user.delete_transactions() 
+
+
+def delete_category(data: dict) -> Response:
+    """
+    Deletes existing transactions in the Firestore database.
+
+    Args:
+        user (User): The updated User object with deleted transaction information.
+
+    Returns:
+        Response: A `Response` object from `delete_transactions()` method.
+    """
+    return User.delete_category(data) 

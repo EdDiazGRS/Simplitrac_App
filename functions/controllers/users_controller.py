@@ -233,6 +233,35 @@ def delete_transactions(req: https_fn.Request) -> https_fn.Response:
 
 @cors_enabled_function
 @https_fn.on_request()
+def delete_category(req: https_fn.Request) -> https_fn.Response:
+    """
+    Deletes transactions from the database.
+
+    Args:
+        req (https_fn.Request): The HTTP request object containing the `user_id` and `category_id` in the query string.
+
+    Returns:
+        https_fn.Response: An HTTP response indicating success or failure of the deletion.
+    """
+    data = None
+    try:
+        data = req.get_json()
+        if not data:  # Check for empty JSON
+            return generate_http_response('Request body must contain valid JSON data', 400)
+    except Exception as e:  # Catch specific JSON decoding errors
+        return generate_http_response(f'Invalid JSON: {e}', 400)
+
+    delete_result = users_service.delete_category(dict(data))
+
+    if delete_result.is_successful():
+        return https_fn.Response(json.dumps(delete_result.get_payload()), 200)
+    else:
+        return generate_http_response(delete_result.get_errors(), 400)
+
+
+
+@cors_enabled_function
+@https_fn.on_request()
 def delete_user(req: https_fn.Request) -> https_fn.Response:
     """Deletes a user from the database.
 
