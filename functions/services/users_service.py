@@ -66,3 +66,20 @@ def delete_transactions(user: User) -> Response:
     """
 
     return users_repo.delete_transactions(user)
+
+
+def delete_category(data: dict) -> Response:
+    """
+    Deletes an existing transactions from the database.
+
+    Args:
+        user (User): The updated User object with deleted transaction information.
+
+    Returns:
+        Response: A Response object:
+            - If successful, `result.is_successful()` is True and `result.get_payload()` contains any relevant data (e.g., a success message).
+            - If unsuccessful (user not found), `result.is_successful()` is False and `result.get_errors()` contains "This user does not exist".
+            - In case of other errors during the delete process, the `errors` attribute will contain an appropriate message.
+    """
+
+    return users_repo.delete_category(data)
