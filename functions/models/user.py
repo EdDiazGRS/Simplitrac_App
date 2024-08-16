@@ -4,6 +4,10 @@ from datetime import datetime
 import firebase_admin
 from firebase_admin import firestore, credentials, auth
 import os
+
+from google.api_core.exceptions import InvalidArgument, PermissionDenied
+from google.cloud.firestore_v1 import FieldFilter
+
 from models.category import Category
 from models.transaction import Transaction
 from protocols.user_protocol import UserProtocol
@@ -255,9 +259,19 @@ class User(UserProtocol):
             # check if category has a category_id
             if not cat._category_id:
                 # if no category_id, search for category name in firebase
-                category = db.collection_group(Category.class_name).where('category_name', '==', cat._category_name).get()
-                # category = db.collection_group(Category.class_name).where(filter=FieldFilter('category_name', '==', cat._category_name)).get()
-            
+                # category = db.collection_group(Category.class_name).where('category_name', '==', cat._category_name).get()
+                query_result = db.collection_group(Category.class_name).where(filter=FieldFilter('category_name', '==', cat._category_name))
+
+                category = None
+                try:
+                    category = query_result.get()
+                except PermissionDenied as e:
+                    print(f"Permission Denied: {e}")
+                except InvalidArgument as e:
+                    print(f"Invalid Argument: {e}")
+                except Exception as e:
+                    print(f"Unexpected error: {e}")
+
                 # remove duplicate category_id by assigning to set
                 cat_set = set()
                 for c in category:
