@@ -402,7 +402,6 @@ class User(UserProtocol):
             Response: An object indicating the outcome of the operation:
         """
         result = Response()
-        cat_name = str
 
         # Query for the user document
         document = db.collection(User.class_name).document(data['user_id']).collection(Category.class_name).document(data['category_id'])

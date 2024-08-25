@@ -82,4 +82,5 @@ def delete_category(data: dict) -> Response:
     Returns:
         Response: A `Response` object from `delete_transactions()` method.
     """
-    return User.delete_category(data) 
+    user_instance = User(data.get('user_id'))
+    return user_instance.delete_category(data) 
