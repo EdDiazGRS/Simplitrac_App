@@ -254,7 +254,7 @@ def delete_category(req: https_fn.Request) -> https_fn.Response:
     delete_result = users_service.delete_category(dict(data))
 
     if delete_result.is_successful():
-        return https_fn.Response(json.dumps(delete_result.get_payload()), 200)
+        return https_fn.Response(json.dumps(delete_result.get_payload().serialize()), 200)
     else:
         return generate_http_response(delete_result.get_errors(), 400)
 
