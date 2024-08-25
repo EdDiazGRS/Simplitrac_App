@@ -394,7 +394,7 @@ class User(UserProtocol):
 
         return result
 
-    def delete_category(data: dict) -> Response:
+    def delete_category(self, data: dict) -> Response:
         """
         Deletes transactions on the Firestore database.
     
@@ -408,10 +408,9 @@ class User(UserProtocol):
         document = db.collection(User.class_name).document(data['user_id']).collection(Category.class_name).document(data['category_id'])
 
         if document:
-            cat_name = document.get().to_dict()['category_name']
             document.delete()
         
-        result.set_payload(f"Category `{cat_name}` deleted")
+        result.set_payload(self)
 
         return result
 
