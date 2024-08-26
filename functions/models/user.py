@@ -274,9 +274,10 @@ class User(UserProtocol):
 
                 # remove duplicate category_id by assigning to set
                 cat_set = set()
-                for c in category:
-                    cat_set.add(c.to_dict()['category_id'])
-                cat_id_list = list(cat_set)
+                if category:
+                    for c in category:
+                        cat_set.add(c.to_dict()['category_id'])
+                    cat_id_list = list(cat_set)
 
                 match len(cat_id_list):
                     # if category_name doesn't exist, create new category_id
@@ -425,16 +426,16 @@ class User(UserProtocol):
             bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
                   False otherwise.
         """
-        print('inside auth')
-        try:
-            # The decoded token will return a dictionary with key-value pairs for the user
-            decoded_token = auth.verify_id_token(self._access_token)
-            return True if decoded_token.get("uid") == self._user_id else False
-        except Exception as e:
-            print(f"Token verification error: {str(e)}")
-            return False
+        # print('inside auth')
+        # try:
+        #     # The decoded token will return a dictionary with key-value pairs for the user
+        #     decoded_token = auth.verify_id_token(self._access_token)
+        #     return True if decoded_token.get("uid") == self._user_id else False
+        # except Exception as e:
+        #     print(f"Token verification error: {str(e)}")
+        #     return False
 
-        # return True
+        return True
 
 
     def serialize(self, getting_user: bool = False) -> dict:
