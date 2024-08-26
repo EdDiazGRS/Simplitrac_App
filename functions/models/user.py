@@ -274,10 +274,11 @@ class User(UserProtocol):
 
                 # remove duplicate category_id by assigning to set
                 cat_set = set()
+                cat_id_list = []
                 if category:
                     for c in category:
                         cat_set.add(c.to_dict()['category_id'])
-                    cat_id_list = list(cat_set)
+                    cat_id_list.append(list(cat_set))
 
                 match len(cat_id_list):
                     # if category_name doesn't exist, create new category_id
