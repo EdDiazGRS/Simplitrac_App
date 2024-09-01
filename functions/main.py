@@ -1,35 +1,64 @@
+from controllers.users_controller import update_user, create_new_user, get_existing_user, delete_user, \
+    delete_transactions, delete_category
+from controllers.ocr_controller import process_receipt
+from flask import Flask, jsonify, request
 import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
-
-# Adding this to the Operating system environment variables to fix  an issue with the OCR functions
-os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
-
-# While using .. before the modules does not display errors locally, when you try to run the emulator
-# or the deploy the code to firebase, it will give you the following error:
-# ImportError: attempted relative import beyond top-level package
-# So you have to open the functions folder as the project and run everything from there
 
 # Load environment variables
-from dotenv import load_dotenv
-env_path = os.path.join(os.path.dirname(__file__), '../.env')
-load_dotenv(env_path)
+load_dotenv()
 
-emulators_running = os.getenv('FIRESTORE_EMULATOR_HOST')
+# Fix for OCR functions
+os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
-if emulators_running:
-    #Local environment settings
-    sys.path.insert(0, Path(__file__).parent.parent.as_posix())
-    from controllers.users_controller import update_user, create_new_user, get_existing_user, delete_user, delete_transactions, delete_category
-    from controllers.ocr_controller import process_receipt
-else:
-    # Production settings
-    sys.path.insert(0, Path(__file__).parent.as_posix())
-    from controllers.users_controller import update_user, create_new_user, get_existing_user, delete_user, delete_transactions, delete_category
-    from controllers.ocr_controller import process_receipt
+# Initialize Flask app
+app = Flask(__name__)
 
 
+@app.route('/user/create', methods=['POST'])
+def create_user():
+    data = request.json
+    return create_new_user(data)
 
-__all__ = ['create_new_user', 'update_user', 'get_existing_user', 'delete_user', 'delete_transactions', 'delete_category', process_receipt]
+
+@app.route('/user/update', methods=['PUT'])
+def update_user_route():
+    data = request.json
+    return update_user(data)
+
+
+@app.route('/user/get', methods=['GET'])
+def get_user():
+    user_id = request.args.get('id')
+    return get_existing_user(user_id)
+
+
+@app.route('/user/delete', methods=['DELETE'])
+def delete_user_route():
+    user_id = request.args.get('id')
+    return delete_user(user_id)
+
+
+@app.route('/transactions/delete', methods=['DELETE'])
+def delete_transactions_route():
+    user_id = request.args.get('user_id')
+    return delete_transactions(user_id)
+
+
+@app.route('/category/delete', methods=['DELETE'])
+def delete_category_route():
+    category_id = request.args.get('category_id')
+    return delete_category(category_id)
+
+
+@app.route('/process-receipt', methods=['POST'])
+def process_receipt_route():
+    image_data = request.files['image']
+    return process_receipt(image_data)
+
+
+# Start the Flask app
+if __name__ == '__main__':
+    app.run(debug=True)  # Remove debug=True in production
