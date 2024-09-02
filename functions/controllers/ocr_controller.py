@@ -47,8 +47,8 @@ def cors_enabled_function(func):
     return wrapper
 
 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def process_receipt(req: https_fn.Request) -> https_fn.Response:
     try:
 

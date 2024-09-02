@@ -7,45 +7,45 @@ from urllib.parse import parse_qs
 from typing import Union
 import json
 from functools import wraps
-
-
-def cors_enabled_function(func):
-    """Decorator for enabling Cross-Origin Resource Sharing (CORS) on Firebase HTTP functions.
-
-    This decorator adds the necessary CORS headers to allow cross-origin requests 
-    to your Firebase function endpoints. It handles both the preflight OPTIONS 
-    request and modifies the response headers of the decorated function to ensure 
-    proper CORS support.
-
-    Args:
-        func: The Firebase HTTP function to be wrapped.
-    """
-    @wraps(func)
-    def wrapper(req, *args, **kwargs):
-        if req.method == 'OPTIONS':
-            headers = {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'PUT, POST, GET, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-            }
-            print("Inside cors function")
-            return https_fn.Response('', 204, headers)
-
-        # Call the original function
-        response = func(req, *args, **kwargs)
-
-        # Ensure the response has the CORS headers
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        print("Returning response in cors")
-        print(response)
-        return response
-    print("returning wrapper")
-    return wrapper
-
+#
+#
+# def cors_enabled_function(func):
+#     """Decorator for enabling Cross-Origin Resource Sharing (CORS) on Firebase HTTP functions.
+#
+#     This decorator adds the necessary CORS headers to allow cross-origin requests
+#     to your Firebase function endpoints. It handles both the preflight OPTIONS
+#     request and modifies the response headers of the decorated function to ensure
+#     proper CORS support.
+#
+#     Args:
+#         func: The Firebase HTTP function to be wrapped.
+#     """
+#     @wraps(func)
+#     def wrapper(req, *args, **kwargs):
+#         if req.method == 'OPTIONS':
+#             headers = {
+#                 'Access-Control-Allow-Origin': '*',
+#                 'Access-Control-Allow-Methods': 'PUT, POST, GET, DELETE, OPTIONS',
+#                 'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+#             }
+#             print("Inside cors function")
+#             return https_fn.Response('', 204, headers)
+#
+#         # Call the original function
+#         response = func(req, *args, **kwargs)
+#
+#         # Ensure the response has the CORS headers
+#         response.headers['Access-Control-Allow-Origin'] = '*'
+#         print("Returning response in cors")
+#         print(response)
+#         return response
+#     print("returning wrapper")
+#     return wrapper
+#
 
 # Firebase HTTP Function Handlers 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def create_new_user(req: https_fn.Request) -> https_fn.Response:
     print("Inside create_new_user function")
     print(f"Request method: {req.method}")
@@ -99,8 +99,8 @@ def create_new_user(req: https_fn.Request) -> https_fn.Response:
     else:
         return https_fn.Response(f'There was an error: {response.get_errors()}', 400)
 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def get_existing_user(req: https_fn.Request) -> https_fn.Response:
     """Retrieves an existing user from the database.
 
@@ -130,8 +130,8 @@ def get_existing_user(req: https_fn.Request) -> https_fn.Response:
         
 
 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def update_user(req: https_fn.Request) -> https_fn.Response:
     """Updates an existing user in the database.
 
@@ -189,8 +189,8 @@ def update_user(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(update_result.get_errors(), 400)
 
 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def delete_transactions(req: https_fn.Request) -> https_fn.Response:
     """
     Deletes transactions from the database.
@@ -231,8 +231,8 @@ def delete_transactions(req: https_fn.Request) -> https_fn.Response:
         return generate_http_response(edit_result.get_errors(), 400)
 
 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def delete_category(req: https_fn.Request) -> https_fn.Response:
     """
     Deletes transactions from the database.
@@ -260,8 +260,8 @@ def delete_category(req: https_fn.Request) -> https_fn.Response:
 
 
 
-@cors_enabled_function
-@https_fn.on_request()
+# @cors_enabled_function
+# @https_fn.on_request()
 def delete_user(req: https_fn.Request) -> https_fn.Response:
     """Deletes a user from the database.
 
