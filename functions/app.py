@@ -6,57 +6,63 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+import logging
+from flask_cors import CORS
 
-# Load environment variables
 load_dotenv()
 
 # Fix for OCR functions
 os.environ['OBJC_DISABLE_INITIALIZE_FORK_SAFETY'] = 'YES'
 
-# Initialize Flask app
 app = Flask(__name__)
+CORS(app)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+
+@app.route('/test', methods=['GET'])
+def test():
+    print("Test endpoint hit")
+    return "Test successful"
 
 
 @app.route('/user/create', methods=['POST'])
 def create_user():
-    data = request.json
-    return create_new_user(data)
+    # data = request.json
+    return create_new_user(request)
 
 
 @app.route('/user/update', methods=['PUT'])
 def update_user_route():
-    data = request.json
-    return update_user(data)
+    user_id = request.args.get("user_id")
+    print(f"Updating user: {user_id}")
+    return update_user(request)
 
 
 @app.route('/user/get', methods=['GET'])
 def get_user():
-    user_id = request.args.get('id')
-    return get_existing_user(user_id)
+    return get_existing_user(request)
 
 
 @app.route('/user/delete', methods=['DELETE'])
 def delete_user_route():
-    user_id = request.args.get('id')
-    return delete_user(user_id)
+    return delete_user(request)
 
 
 @app.route('/transactions/delete', methods=['DELETE'])
 def delete_transactions_route():
-    user_id = request.args.get('user_id')
-    return delete_transactions(user_id)
+    return delete_transactions(request)
 
 
 @app.route('/category/delete', methods=['DELETE'])
 def delete_category_route():
-    category_id = request.args.get('category_id')
-    return delete_category(category_id)
+    return delete_category(request)
 
 
 @app.route('/process-receipt', methods=['POST'])
 def process_receipt_route():
-    image_data = request.files['image']
-    return process_receipt(image_data)
+    return process_receipt(request)
 
 
 # Start the Flask app
