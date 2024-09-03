@@ -8,4 +8,4 @@ EXPOSE 5000
 # -w 4 uses 4 workers
 # "-b", "0.0.0.0:5000" means bind on all ip addresses on port 5000
 # --reload tells the server to watch for changes
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "main:app", "--reload"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app", "--reload"]

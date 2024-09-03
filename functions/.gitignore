@@ -5,3 +5,4 @@ __pycache__/
 nltk_data
 temp_google_credentials.json
 
+.DS_Store
