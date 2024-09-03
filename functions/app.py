@@ -67,4 +67,4 @@ def process_receipt_route():
 
 # Start the Flask app
 if __name__ == '__main__':
-    app.run(debug=True)  # Remove debug=True in production
+    app.run(host="0.0.0.0", port=5001)  # Remove debug=True in production
