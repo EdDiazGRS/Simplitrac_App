@@ -136,7 +136,7 @@ def process_receipt_image(extracted_text):
     prompt = f"""
     Given this extracted text from a receipt:
     {extracted_text}
-    Return a JSON object with the vendor name, date, amount, and category from this list of categories : ({list_of_categories}). Do not include any Markdown formatting or code block syntax in your response.
+    Return a JSON object with the vendor name, date, amount without the dollar sign, and category from this list of categories : ({list_of_categories}). Do not include any Markdown formatting or code block syntax in your response.
     """
 
     try:
