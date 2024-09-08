@@ -6,3 +6,5 @@ nltk_data
 temp_google_credentials.json
 
 .DS_Store
+
+**.pem
