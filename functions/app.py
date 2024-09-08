@@ -60,11 +60,11 @@ def delete_category_route():
     return delete_category(request)
 
 
-@app.route('/process-receipt', methods=['POST'])
+@app.route('/process_receipt', methods=['POST'])
 def process_receipt_route():
     return process_receipt(request)
 
 
 # Start the Flask app
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=5001)  # Remove debug=True in production
+    app.run(ssl_context=('fullchain.pem', 'privkey.pem'), port=5001)
