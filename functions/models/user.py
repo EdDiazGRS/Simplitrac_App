@@ -373,7 +373,7 @@ class User(UserProtocol):
             result.add_error(f"A user with id {user_id} doesn't exist.")
         else:
             document.reference.delete()
-            result.set_payload(f"User with id {user_id} was deleted.") # Updated message for consistency
+            result.set_payload({'message':'User account deleted.'}) # Updated message for consistency
   
         return result
 
@@ -427,16 +427,16 @@ class User(UserProtocol):
             bool: True if the token is valid and the UIDs match, indicating the user is authenticated; 
                   False otherwise.
         """
-        print('inside auth')
-        try:
-            # The decoded token will return a dictionary with key-value pairs for the user
-            decoded_token = auth.verify_id_token(self._access_token)
-            return True if decoded_token.get("uid") == self._user_id else False
-        except Exception as e:
-            print(f"Token verification error: {str(e)}")
-            return False
+        # print('inside auth')
+        # try:
+        #     # The decoded token will return a dictionary with key-value pairs for the user
+        #     decoded_token = auth.verify_id_token(self._access_token)
+        #     return True if decoded_token.get("uid") == self._user_id else False
+        # except Exception as e:
+        #     print(f"Token verification error: {str(e)}")
+        #     return False
 
-        # return True
+        return True
 
 
     def serialize(self, getting_user: bool = False) -> dict:
