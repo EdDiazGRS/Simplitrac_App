@@ -372,8 +372,8 @@ class User(UserProtocol):
         if not document.exists:
             result.add_error(f"A user with id {user_id} doesn't exist.")
         else:
-            document.reference.delete()
-            result.set_payload({'message':'User account deleted.'}) # Updated message for consistency
+            delete_document_with_subcollections(document.reference)
+            result.set_payload({"message": "User account deleted."})  # Updated message for consistency
   
         return result
 
@@ -483,3 +483,16 @@ class User(UserProtocol):
                 'last_login': self._last_login,
                 'admin': self._admin
             }
+
+
+def delete_document_with_subcollections(doc_ref):
+    # Delete all subcollections
+    subcollections = doc_ref.collections()
+    for subcollection in subcollections:
+        for doc in subcollection.stream():
+            # Recursively delete documents in subcollections
+            delete_document_with_subcollections(doc.reference)
+
+    # Delete the document itself
+    doc_ref.delete()
+    print(f"Deleted document: {doc_ref.path}")

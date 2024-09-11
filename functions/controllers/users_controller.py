@@ -282,7 +282,7 @@ def delete_user(req: https_fn.Request) -> https_fn.Response:
     get_result = users_service.delete_user(user_id)
     
     if get_result.is_successful():
-        return https_fn.Response(json.dumps(get_result.get_payload),200)
+        return https_fn.Response(json.dumps(get_result.get_payload()),200)
     else:
         return generate_http_response(get_result.get_errors(), 400)
 
