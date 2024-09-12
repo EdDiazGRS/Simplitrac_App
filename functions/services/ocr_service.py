@@ -71,21 +71,22 @@ if not check_nltk_data('tokenizers/punkt'):
 if not check_nltk_data('corpora/stopwords'):
     nltk.download('stopwords')
 
-# # Initialize Vision client
+# Initialize Vision client
 # client = vision.ImageAnnotatorClient()
 
-# def extract_text(image_path):
-#     """Extracts text from the image using Google Cloud Vision API."""
-#     with io.open(image_path, 'rb') as image_file:
-#         content = image_file.read()
+def extract_text(image_path):
+    client = vision.ImageAnnotatorClient()
+    """Extracts text from the image using Google Cloud Vision API."""
+    with io.open(image_path, 'rb') as image_file:
+        content = image_file.read()
 
-#     image = vision.Image(content=content)
-#     response = client.text_detection(image=image)
-#     texts = response.text_annotations
+    image = vision.Image(content=content)
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
 
-#     if texts:
-#         return texts[0].description
-#     return None
+    if texts:
+        return texts[0].description
+    return None
 
 # def extract_receipt_data(text):
 #     """Parses the extracted text to find key receipt data."""
@@ -113,22 +114,22 @@ if not check_nltk_data('corpora/stopwords'):
 
 # storage_client = storage.Client()
 
-def extract_text(image_file):
-    vision_client = vision.ImageAnnotatorClient()
+# def extract_text(image_file):
+#     vision_client = vision.ImageAnnotatorClient()
 
-    """Detects text in the file."""
-    image = vision.Image(content=image_file)
+#     """Detects text in the file."""
+#     image = vision.Image(content=image_file)
 
-    logging.info("Detecting text in picture")
+#     logging.info("Detecting text in picture")
 
-    response = vision_client.text_detection(image=image)
-    logging.info(response.text_annotations)
-    texts = response.text_annotations
-    if not texts:
-        return None
-    else:
+#     response = vision_client.text_detection(image=image)
+#     logging.info(response.text_annotations)
+#     texts = response.text_annotations
+#     if not texts:
+#         return None
+#     else:
        
-        return texts[0].description 
+#         return texts[0].description 
     
 def process_receipt_image(extracted_text):
     """Process the extracted text using OpenAI API."""
@@ -136,7 +137,7 @@ def process_receipt_image(extracted_text):
     prompt = f"""
     Given this extracted text from a receipt:
     {extracted_text}
-    Return a JSON string with the vendor name, date, amount without the dollar sign, and category_name from this list of categories : ({list_of_categories}). Do not include any Markdown formatting or code block syntax in your response.
+    Return a JSON string with the vendor name as vendor, the date as createdAt, amount without the dollar sign, and category_name from this list of categories : ({list_of_categories}). Do not include any Markdown formatting or code block syntax in your response.
     """
 
     try:
@@ -291,12 +292,22 @@ def process_receipt_image(extracted_text):
 #     return doc_ref
 
 # Test the updated code with the provided images
-# if __name__ == "__main__":
-#     image_paths = ["/Users/eddiaz/Desktop/SimpliTrac/functions/services/R3.jpg"]
-#     for image_path in image_paths:
-#         text = extract_text(image_path)
-#         print("Extracted text:")
-#         print(text)
-#         print("\nParsing receipt data...")
-#         parsed_data = extract_receipt_data(text)
-#         print("\nParsed Receipt Data:", parsed_data)
+if __name__ == "__main__":
+    image_paths = ["/Users/eddiaz/Desktop/Simplitrac Project/SimpliTrac/functions/services/R4.jpg"]
+    for image_path in image_paths:
+        text = extract_text(image_path)
+        print("Extracted text:")
+        print(text)
+        print("\nParsing receipt data...")
+        print('\n''\n''\n''\n''\n''\n''\n')
+        parsed_data = process_receipt_image(text)
+        print("\nParsed Receipt Data:", parsed_data)
+        print('\n''\n''\n''\n''\n''\n''\n')
+
+
+
+
+
+
+
+   
