@@ -20,7 +20,7 @@ Live - [https://dave-b-b.github.io/simplitrac_frontend](https://dave-b-b.github.
 - Paul An - Product Owner / Scrum Leader
 - Dave Brown - Technical Lead
 - Patrick Snoop - UX, Testing, and QA Lead
-- Eddie Diaz - Flex Contributor
+- Edward Diaz - AI Tech lead
 - Kirn Kim - Documentation and Presentation Lead
 
 ## Tech Stack:
