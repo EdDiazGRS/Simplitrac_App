@@ -1,6 +1,6 @@
 # SimpliTrac JTC Capstone
 
-<img src="frontend/dist/assets/simplitrac.webp" alt="drawing" width="500"/>
+<img src="assets/Simplitrac image_2.png" alt="Simplitrac Logo" width="1000"/><br>
 
 Simplicity in finance Tracking
 
