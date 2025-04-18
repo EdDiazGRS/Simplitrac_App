@@ -65,8 +65,8 @@ The Entity Relationship Diagram for the data collection is as follows:
         - recheck: bool
 
 Swimlane Diagrams:<br>
-<img src="frontend/dist/assets/signup_process.png" alt="drawing" width="500"/><br>
-<img src="frontend/dist/assets/input_track.png" alt="drawing" width="1000"/><br>
+<img src="SimpliTrac/assets/swimlane.png" alt="drawing" width="500"/><br>
+<img src="SimpliTrac/assets/erd.png" alt="drawing" width="1000"/><br>
 
 ## Backend API Endpoint
 
