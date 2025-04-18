@@ -65,8 +65,8 @@ The Entity Relationship Diagram for the data collection is as follows:
         - recheck: bool
 
 Swimlane Diagrams:<br>
-<img src="SimpliTrac/assets/swimlane.png" alt="drawing" width="500"/><br>
-<img src="SimpliTrac/assets/erd.png" alt="drawing" width="1000"/><br>
+<img src="assets/swimlane.png" alt="Swimlane Diagram" width="500"/><br>
+<img src="assets/erd.png" alt="ERD Diagram" width="1000"/><br>
 
 ## Backend API Endpoint
 
